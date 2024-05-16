@@ -43,10 +43,19 @@ I used `bigquery_json.py` to parse the lat lon and geolocation data from the SRA
 
 > Note that these scripts are based on [atavide-lite](https://github.com/linsalrob/atavide_lite) and we used that for a lot of the data analysis. However, we also ran some of this on different clusters, including [NCI](https://www.nci.org.au/) which uses PBS and (Pawsey)[https://pawsey.org.au/] which uses slurm. For the PBS scripts, we generally optimise by writing to the temporary `$PBS_JOBFS` filesystem and then copying the data to the final location. 
 
+
+# Create Mash sketches
+
+We used the `mash.sh` script to calculate sketches for all the read data
+
+# Plot the data
+
+The data analysis and plotting was done in Jupyter in the `WorldWideAnalysis.ipynb` notebook
+
+
 Other scripts included here:
 
 - `fastp.pbs`: Runs [fastp](https://github.com/OpenGene/fastp) using the PBS queue on NCI. 
 - `fastp.sh`: an array job that reads a file called `R1_reads.txt` and processes the reads in that file
-- `mash.sh`: calculate sketches for all the read data
 
 
