@@ -21,7 +21,7 @@ We integrated data from the [ICTV Virus Metadata Resource](https://ictv.global/v
 
 The viruses are summarised in this figure:
 
-![Human Viruses](img/EukVirusies.png "Eukaryotic viruses that are probably mostly infecting humans.<br />The red lines indicate quality.")
+![Human Viruses](img/EukViruses.png "Eukaryotic viruses that are probably mostly infecting humans.<br />The red lines indicate quality.")
 
 The red dotted lines indicate 80% percent identity, and a minimum alignment length of 50 amino acids. (The x-axis is currently in base pairs).
 
