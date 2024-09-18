@@ -1,8 +1,10 @@
-scipy
-statsmodels
-numpy
-matplotlib
-pandas
-seaborn
 jupyter
+matplotlib
+natsort
+numpy
+pandas
+scipy
+scikit-learn
+seaborn
+statsmodels
 
