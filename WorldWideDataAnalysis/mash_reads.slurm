@@ -3,12 +3,12 @@
 #SBATCH --job-name=mash
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=64GB
 #SBATCH -o mash-%j.out
 #SBATCH -e mash-%j.err
 
-set -euo pipefail
+# set -euo pipefail
 eval "$(conda shell.bash hook)"
 
 # Create a temporary environment to house mash and install it.
@@ -21,10 +21,12 @@ conda activate /scratch/pawsey1018/edwa0468/software/miniconda3/$TMP
 FASTA="fasta"
 MASH="mash"
 
-for F in $(find $FASTA  -type f -printf "%f\n" | perl -ne 'm/^(...\d+)/; print "$1\n"' | awk '!s[$0]++'); do 
+mkdir -p $MASH
+
+for F in $(find $FASTA  -type f -printf "%f\n" | perl -ne 'm/^(...\d+)/; print "$1\n"' | awk '!s[$0]++' | sort -R); do 
 	if [[ ! -e $MASH/$F.msh ]]; then
 		echo $F; 
-		mash sketch -p 8 -I $F -r -o $MASH/$F $FASTA/${F}*;
+		mash sketch -I $F -r -o $MASH/$F $FASTA/${F}*;
 	fi
 done
 
