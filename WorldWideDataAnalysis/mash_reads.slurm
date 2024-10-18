@@ -13,7 +13,12 @@ eval "$(conda shell.bash hook)"
 
 ############ README
 #
-# We can create a tmp directory, but with pawsey you will run out of space 
+#
+# You can run this command eg. on deepthought by providing the name of a conda environment
+#
+# e.g. sbatch mash_reads.slurm mash
+#
+# Alternatively, we can create a tmp directory, but with pawsey you will run out of space 
 # as an alternative you can create the tmp directory and provide is on the sbatch command
 # 
 
