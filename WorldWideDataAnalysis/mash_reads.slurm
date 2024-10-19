@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --account=pawsey1018
 #SBATCH --job-name=mash
 #SBATCH --time=1-0
 #SBATCH --ntasks=1
@@ -41,7 +40,8 @@ MASH="mash"
 
 mkdir -p $MASH
 
-for F in $(find $FASTA  -type f -printf "%f\n" | perl -ne 'm/^(...\d+)/; print "$1\n"' | awk '!s[$0]++' | sort -R); do 
+# for F in $(find $FASTA  -type f -printf "%f\n" | perl -ne 'm/^(...\d+)/; print "$1\n"' | awk '!s[$0]++' | sort -R); do 
+for F in $(find $FASTA  -type f -printf "%f\n" | perl -ne 's/_R[12].fasta.gz//; print "$_\n"' | awk '!s[$0]++' | sort -R); do 
 	if [[ ! -e $MASH/$F.msh ]]; then
 		echo $F; 
 		mash sketch -I $F -r -o $MASH/$F $FASTA/${F}*;
