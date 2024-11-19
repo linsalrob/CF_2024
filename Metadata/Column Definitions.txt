@@ -1,4 +1,4 @@
-Column index	Column header	Column meaning	Number of unique entries	Type of data	
+Column index	Column header	Column meaning	Number of unique entries	Type of data	Grouping
 0	NAME	Sample name	127	Text	
 1	minion	MinION sequence ID	62	Text	
 2	MGI	MGI Sequence ID	127	Text	
