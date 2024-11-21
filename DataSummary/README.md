@@ -16,4 +16,7 @@ Did not map to the human genome | Number of reads that did _not_ map to the huma
 Had a match to UniRef50 | Number of reads that mapped to the UniRef50 protein database using MMSeqs2 | 429,542,979 reads
 
 
+# [MinION Sample Counts](MinION_Sample_Counts.tsv)
+
+This three-column table has sequence ID, # reads, #bp.
 
