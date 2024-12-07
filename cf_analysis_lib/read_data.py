@@ -36,7 +36,7 @@ corrections = {
 
 pathogens = {
     "Acinetobacter",
-    "Actinomyces"
+    "Actinomyces",
     "Bordetella",
     "Burkholderia",
     "Chlamydia",
@@ -57,7 +57,7 @@ pathogens = {
     "Streptococcus"
 }
 
-def read_taxonomy(tax_file, firstchar, sequence_type):
+def read_taxonomy(datadir, sequence_type, taxonomy):
     """
     Read the taxonomy file and return a data frame
     """
@@ -67,38 +67,53 @@ def read_taxonomy(tax_file, firstchar, sequence_type):
     elif sequence_type.lower() == 'minion':
         sequence_type = 'minion'
     else:
-        print(f"Sorry. Don't know what {sequence_type} is supposed to be", sys.stderr)
+        print(f"Sorry. Don't know what sequence type {sequence_type} is supposed to be", sys.stderr)
         return None
 
+    tax_file = os.path.join(datadir, sequence_type, "Taxonomy", f"{sequence_type}_reads_{taxonomy}.normalised.tsv.gz")
+    if not os.path.exists(tax_file):
+        print(f"Error: {tax_file} does not exist", sys.stderr)
+        return None
     df = pd.read_csv(tax_file, sep='\t', compression='gzip')
     df = df[df['taxonomy'].str.contains('k__Bacteria')]
-    df = df[~df['taxonomy'].str.endswith(f'{firstchar}__')]
+    df = df[~df['taxonomy'].str.endswith(f'{taxonomy[0]}__')]
     df = df.set_index('taxonomy')
     df = df.rename(columns=corrections[sequence_type])
-    df.index = df.index.str.replace(f'{firstchar}__', '').str.replace('Candidatus ', '')
+    df.index = df.index.str.replace(f'{taxonomy[0]}__', '').str.replace('Candidatus ', '')
     df.index = df.index.str.split(';').str[-1]
 
     df = df.sort_index(axis=1)
     return df
 
-def read_metadata(sequence_type, metadata_file):
+def read_metadata(datadir, sequence_type):
+    """
+    Read the metadata file and return a data frame
+    """
+    sequencing = []
     if sequence_type.lower() == 'mgi':
-        sequence_type = 'MGI'
+        sequencing = ['MGI']
     elif sequence_type.lower() == 'minion':
-        sequence_type = 'minion'
+        sequencing = ['minion']
+    elif sequence_type.lower() == 'mgi_minion':
+        sequencing = ['MGI', 'minion']
     else:
         print(f"Sorry. Don't know what {sequence_type} is supposed to be", sys.stderr)
         return None
 
-    metadata = pd.read_csv(metadata_file, encoding='windows-1252', sep="\t", index_col=0)
-    metadata = metadata[~metadata[sequence_type].isna()]
+    metadata = pd.read_csv(os.path.join(datadir, "Metadata", "Metadata.txt"), encoding='windows-1252', sep="\t", index_col=0)
+
+    if len(sequence_type) == 1:
+        metadata = metadata[~metadata[sequence_type[0]].isna()]
+
 
     metadata = metadata.rename(columns={'Pseudomonas': 'Pseudomonas Culture'})
 
     for ix in metadata.index:
-        s = metadata.loc[ix, sequence_type]
-        if s in corrections[sequence_type]:
-            metadata.loc[ix, sequence_type] = corrections[sequence_type][s]
+        for seq_type in sequencing:
+            s = metadata.loc[ix, seq_type]
+            if s in corrections[seq_type]:
+                metadata.loc[ix, seq_type] = corrections[seq_type][s]
+
     return metadata
 
 def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
@@ -126,7 +141,7 @@ def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
 
     return sboth
 
-def read_subsystems(subsystems_file):
+def read_subsystems(subsystems_file, sequence_type):
     """
     Read the subsystems file and return a data frame
     """
@@ -137,4 +152,5 @@ def read_subsystems(subsystems_file):
         df = pd.read_csv(subsystems_file, sep='\t', compression='gzip', index_col=0)
     else:
         df = pd.read_csv(subsystems_file, sep='\t',  index_col=0)
+    df = df.rename(columns=corrections[sequence_type])
     return df
