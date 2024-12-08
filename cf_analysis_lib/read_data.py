@@ -10,7 +10,7 @@ import os
 import sys
 import pandas as pd
 
-from cf_analysis_lib import metadata_types
+from .metadata_data import metadata_definitions
 
 corrections = {
     "MGI" : {
@@ -116,7 +116,7 @@ def read_metadata(datadir, sequence_type):
                 metadata.loc[ix, seq_type] = corrections[seq_type][s]
 
     # convert the metadata to categories!
-    mdx_types = metadata_types()
+    mdx_types = metadata_definitions()
     for c in metadata.columns:
         if c in mdx_types and mdx_types[c] == 'Categorical':
             metadata[c] = metadata[c].astype('category')
