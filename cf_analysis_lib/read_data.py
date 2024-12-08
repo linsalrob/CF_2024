@@ -120,7 +120,6 @@ def read_metadata(datadir, sequence_type):
     for c in metadata.columns:
         if c in mdx_types and mdx_types[c] == 'Categorical':
             metadata[c] = metadata[c].astype('category')
-            print(f"Setting {c} to category", file=sys.stderr)
 
 
     return metadata

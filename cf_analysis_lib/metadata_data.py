@@ -24,6 +24,6 @@ def metadata_definitions(filename='Column Definitions.txt', metadata_path=os.pat
             if l.startswith('#'):
                 continue
             p = l.strip().split("\t")
-            types[p[0]] = p[4]
+            types[p[1]] = p[4]
 
     return types
