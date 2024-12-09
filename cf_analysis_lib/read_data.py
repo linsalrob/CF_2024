@@ -86,7 +86,7 @@ def read_taxonomy(datadir, sequence_type, taxonomy):
     df = df.sort_index(axis=1)
     return df
 
-def read_metadata(datadir, sequence_type):
+def read_metadata(datadir, sequence_type, categorise=False):
     """
     Read the metadata file and return a data frame
     """
@@ -115,11 +115,12 @@ def read_metadata(datadir, sequence_type):
             if s in corrections[seq_type]:
                 metadata.loc[ix, seq_type] = corrections[seq_type][s]
 
-    # convert the metadata to categories!
-    mdx_types = metadata_definitions()
-    for c in metadata.columns:
-        if c in mdx_types and mdx_types[c] == 'Categorical':
-            metadata[c] = metadata[c].astype('category')
+    if categorise:
+        # convert the metadata to categories!
+        mdx_types = metadata_definitions()
+        for c in metadata.columns:
+            if c in mdx_types and mdx_types[c] == 'Categorical':
+                metadata[c] = metadata[c].astype('category')
 
 
     return metadata
