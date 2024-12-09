@@ -49,6 +49,15 @@ def read_data_frames(sequence_type = "MGI", datadir = "..", sslevel = "subsystem
     df.columns = [re.sub(r'\W+', '_', col) for col in df.columns]
     metadata.columns = [re.sub(r'\W+', '_', col) for col in metadata.columns]
 
+    # rename the df columns that start with numbers
+    nos = {"1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight",
+           "9": "nine"}
+    newcols = {}
+    for c in df.columns:
+        if c[0] in nos:
+            newcols[c] = c.replace(c[0], nos[c[0]], 1)
+    df = df.rename(columns=newcols)
+
     # convert categories to numbers
     # we make a copy of each data frame and then overwrite the columns. Internally this is more efficient than making a df one
     # column at a time.
