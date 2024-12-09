@@ -34,15 +34,15 @@ def read_data_frames(sequence_type = "MGI", datadir = "..", sslevel = "subsystem
         os.path.join(datadir, sequence_type, "FunctionalAnalysis", "subsystems", sslevel), sequence_type)
     ss_df = ss_df.T
     if verbose:
-        print(f"The subsystems df has shape: {ss_df.shape}")
+        print(f"The subsystems df has shape: {ss_df.shape}", file=sys.stderr)
 
     genus_otu = cf_analysis_lib.read_taxonomy(datadir, sequence_type, taxa)
     genus_otu = genus_otu.T
     if verbose:
-        print(f"The taxonomy df has shape: {genus_otu.shape}")
+        print(f"The taxonomy df has shape: {genus_otu.shape}", file=sys.stderr)
     metadata = cf_analysis_lib.read_metadata(datadir, sequence_type, categorise=True)
     if verbose:
-        print(f"The metadata df has shape: {metadata.shape}")
+        print(f"The metadata df has shape: {metadata.shape}", file=sys.stderr)
 
     df = ss_df.merge(genus_otu, left_index=True, right_index=True, how='inner')
 
@@ -79,7 +79,7 @@ def read_data_frames(sequence_type = "MGI", datadir = "..", sslevel = "subsystem
             encoded_metadata[col] = metadata[col].cat.codes
         else:
             if verbose:
-                print(f'Dropping {col}: {metadata[col].dtypes}')
+                print(f'Dropping {col}: {metadata[col].dtypes}', file=sys.stderr)
             to_delete.append(col)
 
     encoded_metadata = encoded_metadata.drop(columns=to_delete)
@@ -102,7 +102,7 @@ def remove_highly_correlated_variables(df, cutoff=0.9, verbose=False):
     high_corr_abundance = high_corr_abundance.drop_duplicates(subset=['Correlation'])
 
     if verbose:
-        print(f"Dropping {len(high_corr_abundance['To'])} highly correlated variables")
+        print(f"Dropping {len(high_corr_abundance['To'])} highly correlated variables", file=sys.stderr)
     df = df.drop(columns=high_corr_abundance['To'])
     return df
 
