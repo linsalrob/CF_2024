@@ -169,12 +169,13 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--dependent', help='dependent variable (note we will reformat the name)', required=True)
     parser.add_argument('-p', '--predictors', help='number of predictors per model', type=int, default=100)
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
+    parser.add_argument('-n', '--datadir', help='data directory', default='..')
     parser.add_argument('-i', '--iterations', help='number of iterations', type=int, default=10000)
 
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
 
-    df, encoded_metadata = read_data_frames(verbose=args.verbose)
+    df, encoded_metadata = read_data_frames(sequence_type=args.sequence_type, datadir=args.datadir, verbose=args.verbose)
     df = remove_highly_correlated_variables(df, 0.9999)
     encoded_metadata = remove_highly_correlated_variables(encoded_metadata.drop(columns=args.sequence_type), 0.9, verbose=args.verbose)
 
