@@ -18,6 +18,7 @@ import random
 
 import statsmodels.formula.api as smf
 import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 datadir = '..'
 sys.path.append('..')
