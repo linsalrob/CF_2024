@@ -118,11 +118,26 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
     """
     results = []
 
+    culture_states = {'CS_mucoid', 'CS_non_mucoid', 'CS_Pseudomonas_aeruginosa', 'CS_Oral_flora',
+                      'CS_Stenophotomonas_maltophilia', 'CS_Aspergillus_fumigatus', 'CS_Aspergillus_flavus',
+                      'CS_Candida_albicans', 'CS_Mycobacteroides_abscessus', 'CS_Mycobacterium_intracellulare',
+                      'CS_Staphylococcus_aureus', 'CS_Inquilinus_limosus', 'CS_Achromobacter_xylosoxidans',
+                      'CS_Burkholderia_cepacia', 'CS_NTM__Smear_negative_', 'CS_Mycolicibacter_terrae',
+                      'CS_Aspergillus_nidulans', 'CS_MAC__Smear_negative_', 'CS_Penicillium', 'CS_Aspergillus_niger',
+                      'CS_Scedosporium_apiospermum', 'CS_Lomentospora_prolificans', 'CS_Acremonium_species',
+                      'CS_MDR_Pseudomonas_aeruginosa', 'CS_Haemophilus_influenzae',  'CS_Scedosporium_apiospermum_1'}
+
+    not_currently_in_metadata = set()
+    for c in culture_states:
+        if c not in encoded_metadata.columns:
+            not_currently_in_metadata.add(c)
+    culture_states = culture_states - not_currently_in_metadata
+
     for i in range(num_iterations):
         if verbose and i % (num_iterations/10) == 0:
             print(f"Iteration {i}", file=sys.stderr)
         subset_predictors = random.sample(list(all_predictors), num_predictors_per_model)  # Randomly select predictors
-        formula = f"{dependent} ~ {' + '.join(subset_predictors)} + CS_Pseudomonas_aeruginosa"
+        formula = f"{dependent} ~ {' + '.join(subset_predictors)} + {' + '.join(culture_states - {dependent})}"
         df_combined_na = df.dropna(subset=subset_predictors)
 
         try:
@@ -177,8 +192,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df, encoded_metadata = read_data_frames(sequence_type=args.sequence_type, datadir=args.datadir, verbose=args.verbose)
+
     df = remove_highly_correlated_variables(df, 0.9999)
     encoded_metadata = remove_highly_correlated_variables(encoded_metadata.drop(columns=args.sequence_type), 0.9, verbose=args.verbose)
+
+    if args.dependent not in encoded_metadata.columns:
+        print(
+            f"Error: {args.dependent} not in metadata so we can't predict it (check if it was dropped with --verbose)",
+            file=sys.stderr)
+        sys.exit(1)
 
     df_combined = df.merge(encoded_metadata, left_index=True, right_index=True, how='inner')
 
