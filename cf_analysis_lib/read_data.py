@@ -101,7 +101,7 @@ def read_metadata(datadir, sequence_type, categorise=False):
         print(f"Sorry. Don't know what {sequence_type} is supposed to be", sys.stderr)
         return None
 
-    metadata = pd.read_csv(os.path.join(datadir, "Metadata", "Metadata.txt"), encoding='windows-1252', sep="\t", index_col=0)
+    metadata = pd.read_csv(os.path.join(datadir, "Metadata", "Metadata.tsv"), encoding='windows-1252', sep="\t", index_col=0)
 
     if len(sequence_type) == 1:
         metadata = metadata[~metadata[sequence_type[0]].isna()]
