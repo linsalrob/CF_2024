@@ -106,7 +106,7 @@ def remove_highly_correlated_variables(df, cutoff=0.9, verbose=False):
     df = df.drop(columns=high_corr_abundance['To'])
     return df
 
-def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterations=10000, output_file=None, verbose=False):
+def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterations=10000, output_file=None, include_culture_states=False, verbose=False):
     """
     Run a linear mixed model with a random subset of predictors
     :param df: The combined data frame
@@ -124,7 +124,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                       'CS_Staphylococcus_aureus', 'CS_Inquilinus_limosus', 'CS_Achromobacter_xylosoxidans',
                       'CS_Burkholderia_cepacia', 'CS_NTM__Smear_negative_', 'CS_Mycolicibacter_terrae',
                       'CS_Aspergillus_nidulans', 'CS_MAC__Smear_negative_', 'CS_Penicillium', 'CS_Aspergillus_niger',
-                      'CS_Scedosporium_apiospermum', 'CS_Lomentospora_prolificans', 'CS_Acremonium_species',
+                      'CS_Lomentospora_prolificans', 'CS_Acremonium_species',
                       'CS_MDR_Pseudomonas_aeruginosa', 'CS_Haemophilus_influenzae',  'CS_Scedosporium_apiospermum_1'}
 
     not_currently_in_metadata = set()
@@ -137,7 +137,10 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
         if verbose and i % (num_iterations/10) == 0:
             print(f"Iteration {i}", file=sys.stderr)
         subset_predictors = random.sample(list(all_predictors), num_predictors_per_model)  # Randomly select predictors
-        formula = f"{dependent} ~ {' + '.join(subset_predictors)} + {' + '.join(culture_states - {dependent})}"
+        if include_culture_states:
+            formula = f"{dependent} ~ {' + '.join(subset_predictors)} + {' + '.join(culture_states - {dependent})}"
+        else:
+            formula = f"{dependent} ~ {' + '.join(subset_predictors)} "
         df_combined_na = df.dropna(subset=subset_predictors)
 
         try:
@@ -162,7 +165,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             # Append to results
             results.append(df_result)
         except Exception as e:
-            pass
+            print(f"Iteration {i} has error {e}", file=sys.stderr)
 
     # Combine results into a single DataFrame
     all_results = pd.concat(results)
@@ -187,6 +190,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
     parser.add_argument('-n', '--datadir', help='data directory', default='..')
     parser.add_argument('-i', '--iterations', help='number of iterations', type=int, default=10000)
+    parser.add_argument('-c', '--culture_states', help='include culture state (CS) metadata in the predictors', action='store_true')
 
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
@@ -208,4 +212,4 @@ if __name__ == "__main__":
     dependent = re.sub(r'\W+', '_', args.dependent)
 
     lmm(df=df_combined, dependent=dependent, all_predictors=all_predictors, num_predictors_per_model=args.predictors,
-        num_iterations=args.iterations, output_file=args.output_file, verbose=args.verbose)
+        num_iterations=args.iterations, output_file=args.output_file, include_culture_states=args.culture_states, verbose=args.verbose)
