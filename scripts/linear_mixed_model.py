@@ -125,7 +125,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                       'CS_Burkholderia_cepacia', 'CS_NTM__Smear_negative_', 'CS_Mycolicibacter_terrae',
                       'CS_Aspergillus_nidulans', 'CS_MAC__Smear_negative_', 'CS_Penicillium', 'CS_Aspergillus_niger',
                       'CS_Lomentospora_prolificans', 'CS_Acremonium_species',
-                      'CS_MDR_Pseudomonas_aeruginosa', 'CS_Haemophilus_influenzae',  'CS_Scedosporium_apiospermum_1'}
+                      'CS_MDR_Pseudomonas_aeruginosa', 'CS_Haemophilus_influenzae'}
 
     not_currently_in_metadata = set()
     for c in culture_states:
@@ -136,12 +136,28 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
     for i in range(num_iterations):
         if verbose and i % (num_iterations/10) == 0:
             print(f"Iteration {i}", file=sys.stderr)
+        
+        # first, come up with a random list of predictors
         subset_predictors = random.sample(list(all_predictors), num_predictors_per_model)  # Randomly select predictors
-        if include_culture_states:
-            formula = f"{dependent} ~ {' + '.join(subset_predictors)} + {' + '.join(culture_states - {dependent})}"
-        else:
-            formula = f"{dependent} ~ {' + '.join(subset_predictors)} "
+        # second, drop any rows where the predictors have null values.
+        # this will change the outcome of the next line!
         df_combined_na = df.dropna(subset=subset_predictors)
+        # third, remove any columns whose column sum is 0
+        to_drop = list(df_combined_na.loc[:,df_combined_na.sum(axis=0) <1].columns)
+        # fourth, drop any columns without enough unique values
+        rcn = df_combined_na[subset_predictors].nunique()
+        to_drop += list(rcn[rcn < 10].index)
+
+        if len(to_drop) > 0:
+            df_combined_na = df_combined_na.drop(columns=to_drop)
+        
+        # fourth, make sure all the predictors are still present
+        updated_predictors = list(set(subset_predictors).intersection(df_combined_na.columns))
+        
+        if include_culture_states:
+            formula = f"{dependent} ~ {' + '.join(updated_predictors)} + {' + '.join(culture_states - {dependent})}"
+        else:
+            formula = f"{dependent} ~ {' + '.join(updated_predictors)} "
 
         try:
             with warnings.catch_warnings():
@@ -165,7 +181,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             # Append to results
             results.append(df_result)
         except Exception as e:
-            print(f"Iteration {i} has error {e}", file=sys.stderr)
+            print(f"Iteration {i} has error {e} formula: {formula}", file=sys.stderr)
 
     # Combine results into a single DataFrame
     all_results = pd.concat(results)
@@ -194,6 +210,8 @@ if __name__ == "__main__":
 
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
+
+    print(f"Running linear_mixed_model.py with arguments: {args}", file=sys.stderr)
 
     df, encoded_metadata = read_data_frames(sequence_type=args.sequence_type, datadir=args.datadir, verbose=args.verbose)
 
