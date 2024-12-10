@@ -68,13 +68,11 @@ def read_taxonomy(datadir, sequence_type, taxonomy):
     elif sequence_type.lower() == 'minion':
         sequence_type = 'minion'
     else:
-        print(f"Sorry. Don't know what sequence type {sequence_type} is supposed to be", sys.stderr)
-        return None
+        raise ValueError(f"Sorry. Don't know what sequence type {sequence_type} is supposed to be")
 
     tax_file = os.path.join(datadir, sequence_type, "Taxonomy", f"{sequence_type}_reads_{taxonomy}.normalised.tsv.gz")
     if not os.path.exists(tax_file):
-        print(f"Error: {tax_file} does not exist", sys.stderr)
-        return None
+        raise FileNotFoundError(f"Error: {tax_file} does not exist")
     df = pd.read_csv(tax_file, sep='\t', compression='gzip')
     df = df[df['taxonomy'].str.contains('k__Bacteria')]
     df = df[~df['taxonomy'].str.endswith(f'{taxonomy[0]}__')]
@@ -98,14 +96,15 @@ def read_metadata(datadir, sequence_type, categorise=False):
     elif sequence_type.lower() == 'mgi_minion':
         sequencing = ['MGI', 'minion']
     else:
-        print(f"Sorry. Don't know what {sequence_type} is supposed to be", sys.stderr)
-        return None
+        raise ValueError(f"Sorry. Don't know what sequence type {sequence_type} is supposed to be")
 
-    metadata = pd.read_csv(os.path.join(datadir, "Metadata", "Metadata.tsv"), encoding='windows-1252', sep="\t", index_col=0)
+    metadata_file = os.path.join(datadir, "Metadata", "Metadata.tsv")
+    if not os.path.exists(metadata_file):
+        raise FileNotFoundError(f"Error: {metadata_file} does not exist")
+    metadata = pd.read_csv(metadata_file, encoding='windows-1252', sep="\t", index_col=0)
 
     if len(sequence_type) == 1:
         metadata = metadata[~metadata[sequence_type[0]].isna()]
-
 
     metadata = metadata.rename(columns={'Pseudomonas': 'Pseudomonas Culture'})
 
@@ -125,6 +124,20 @@ def read_metadata(datadir, sequence_type, categorise=False):
                 metadata[c] = pd.to_datetime(metadata[c])
 
     return metadata
+
+def read_subsystems(subsystems_file, sequence_type):
+    """
+    Read the subsystems file and return a data frame
+    """
+    if not os.path.exists(subsystems_file):
+        raise FileNotFoundError(f"Error: {subsystems_file} does not exist")
+
+    if subsystems_file.endswith('.gz'):
+        df = pd.read_csv(subsystems_file, sep='\t', compression='gzip', index_col=0)
+    else:
+        df = pd.read_csv(subsystems_file, sep='\t', index_col=0)
+    df = df.rename(columns=corrections[sequence_type])
+    return df
 
 def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
     """
@@ -150,17 +163,3 @@ def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
     sboth = sboth.sort_index(axis=1) # sort by column names
 
     return sboth
-
-def read_subsystems(subsystems_file, sequence_type):
-    """
-    Read the subsystems file and return a data frame
-    """
-    if not os.path.exists(subsystems_file):
-        print(f"Error: {subsystems_file} does not exist", sys.stderr)
-        return None
-    if subsystems_file.endswith('.gz'):
-        df = pd.read_csv(subsystems_file, sep='\t', compression='gzip', index_col=0)
-    else:
-        df = pd.read_csv(subsystems_file, sep='\t',  index_col=0)
-    df = df.rename(columns=corrections[sequence_type])
-    return df
