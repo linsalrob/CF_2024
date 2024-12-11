@@ -49,3 +49,26 @@ def categories_to_numeric(df, sequence_type):
 
     encoded = encoded.drop(columns=to_delete)
     return encoded
+
+def remove_highly_correlated_data(df, corr, sequence_type,  verbose=False):
+    """
+    Remove highly correlated data from the data frame
+    :param df: the data frame
+    :param corr: the minimum correlation to remove
+    :param sequence_type: the name of the column that is the sequence type and will be ignored
+    :param verbose: more output
+    :return: the clean data frame
+    """
+    correlation_matrix = df.drop(columns=sequence_type).corr(method='pearson')
+
+    # Find highly correlated pairs (absolute correlation > 0.8)
+    high_corr = correlation_matrix.unstack().reset_index()
+    high_corr.columns = ['From', 'To', 'Correlation']
+    high_corr = high_corr[
+        (high_corr['Correlation'].abs() > corr) & (high_corr['From'] != high_corr['To'])
+        ]
+
+    # Drop duplicate pairs (e.g., (A, B) and (B, A))
+    high_corr = high_corr.drop_duplicates(subset=['Correlation'])
+
+    return df.drop(columns=high_corr['To'])
