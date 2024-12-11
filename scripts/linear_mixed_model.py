@@ -49,9 +49,9 @@ def read_data_frames(sequence_type = "MGI", datadir = "..", sslevel = "subsystem
     df = cf_analysis_lib.compatible_columns(df)
     metadata = cf_analysis_lib.compatible_columns(metadata)
 
-    encoded_metadata = cf_analysis_lib.categories_to_numeric(metadata, sequence_type)
-    encoded_metadata = cf_analysis_lib.remove_highly_correlated_data(encoded_metadata, 0.9, sequence_type, True)
-    df = cf_analysis_lib.remove_highly_correlated_data(df, 0.9999, sequence_type=None, verbose=True)
+    encoded_metadata = cf_analysis_lib.categories_to_numeric(metadata)
+    encoded_metadata = cf_analysis_lib.remove_highly_correlated_data(encoded_metadata, 0.9, True)
+    df = cf_analysis_lib.remove_highly_correlated_data(df, 0.9999, verbose=True)
 
     return df, encoded_metadata
 
