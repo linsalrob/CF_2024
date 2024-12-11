@@ -59,7 +59,11 @@ def remove_highly_correlated_data(df, corr, sequence_type,  verbose=False):
     :param verbose: more output
     :return: the clean data frame
     """
-    correlation_matrix = df.drop(columns=sequence_type).corr(method='pearson')
+
+    if sequence_type:
+        correlation_matrix = df.drop(columns=sequence_type).corr(method='pearson')
+    else:
+        correlation_matrix = df.corr(method='pearson')
 
     # Find highly correlated pairs (absolute correlation > 0.8)
     high_corr = correlation_matrix.unstack().reset_index()
@@ -70,5 +74,8 @@ def remove_highly_correlated_data(df, corr, sequence_type,  verbose=False):
 
     # Drop duplicate pairs (e.g., (A, B) and (B, A))
     high_corr = high_corr.drop_duplicates(subset=['Correlation'])
+
+    if verbose:
+        print(f"Dropping {len(high_corr['To'])} highly correlated variables")
 
     return df.drop(columns=high_corr['To'])
