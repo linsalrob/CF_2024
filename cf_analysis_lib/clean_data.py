@@ -20,7 +20,7 @@ def compatible_columns(df):
     df.columns = [re.sub(r'^(\d)', lambda x: nos[x.group(1)] + "_", c) for c in df.columns]
     return df
 
-def categories_to_numeric(df, sequence_type):
+def categories_to_numeric(df):
     """
     Convert categories and objects to numeric forms
     We use numbers if we have them, we keep the MGI/MinION ID so we can use it to join tables, but we don't want to use it as a predictor.
@@ -28,7 +28,6 @@ def categories_to_numeric(df, sequence_type):
     We drop the other columns so we don't try and predict on free text columns.
     I'm not sure what to do about dates, yet, so I ignore them for now
     :param df: The data frame to clean
-    :param sequence_type: The name of the column that is the sequence type
     :return: A clean data frame
     """
 
@@ -39,8 +38,6 @@ def categories_to_numeric(df, sequence_type):
     for col in df.columns:
         if pd.api.types.is_numeric_dtype(df[col]):
             continue
-        elif col == sequence_type:
-            continue
         elif df[col].dtypes == 'category':
             encoded[col] = df[col].cat.codes
         else:
@@ -50,7 +47,7 @@ def categories_to_numeric(df, sequence_type):
     encoded = encoded.drop(columns=to_delete)
     return encoded
 
-def remove_highly_correlated_data(df, corr, sequence_type,  verbose=False):
+def remove_highly_correlated_data(df, corr, verbose=False):
     """
     Remove highly correlated data from the data frame
     :param df: the data frame
@@ -60,10 +57,7 @@ def remove_highly_correlated_data(df, corr, sequence_type,  verbose=False):
     :return: the clean data frame
     """
 
-    if sequence_type:
-        correlation_matrix = df.drop(columns=sequence_type).corr(method='pearson')
-    else:
-        correlation_matrix = df.corr(method='pearson')
+    correlation_matrix = df.corr(method='pearson')
 
     # Find highly correlated pairs (absolute correlation > 0.8)
     high_corr = correlation_matrix.unstack().reset_index()
