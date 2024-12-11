@@ -13,7 +13,7 @@ def compatible_columns(df):
     """
 
     # remove spaces from the column names
-    df.columns = [re.sub(r'\s+', '_', c) for c in df.columns]
+    df.columns = [re.sub(r'\W+', '_', c) for c in df.columns]
     # remove numbers from the start of the column names
     nos = {"1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight",
            "9": "nine"}
