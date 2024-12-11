@@ -46,65 +46,15 @@ def read_data_frames(sequence_type = "MGI", datadir = "..", sslevel = "subsystem
 
     df = ss_df.merge(genus_otu, left_index=True, right_index=True, how='inner')
 
-    # rename the columns to remove any special characters
-    df.columns = [re.sub(r'\W+', '_', col) for col in df.columns]
-    metadata.columns = [re.sub(r'\W+', '_', col) for col in metadata.columns]
+    df = cf_analysis_lib.compatible_columns(df)
+    metadata = cf_analysis_lib.compatible_columns(metadata)
 
-    # rename the columns that start with numbers
-    nos = {"1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight",
-           "9": "nine"}
-    new_df_cols = {}
-    for c in df.columns:
-        if c[0] in nos:
-            new_df_cols[c] = c.replace(c[0], nos[c[0]], 1)
-    df = df.rename(columns=new_df_cols)
-
-    newmetacols = {}
-    for c in metadata.columns:
-        if c[0] in nos:
-            newmetacols[c] = c.replace(c[0], nos[c[0]], 1)
-    metadata = metadata.rename(columns=newmetacols)
-
-    # convert categories to numbers
-    # we make a copy of each data frame and then overwrite the columns. Internally this is more efficient than making a df one
-    # column at a time.
-    encoded_metadata = metadata.copy()
-    to_delete = ['Pseudomonas_Culture']  # this is a duplicate columns with 'CS_Pseudomonas_aeruginosa'
-    for col in metadata:
-        if pd.api.types.is_numeric_dtype(metadata[col]):
-            continue
-        elif col == sequence_type:
-            continue
-        elif metadata[col].dtypes == 'category':
-            encoded_metadata[col] = metadata[col].cat.codes
-        else:
-            if verbose:
-                print(f'Dropping {col}: {metadata[col].dtypes}', file=sys.stderr)
-            to_delete.append(col)
-
-    encoded_metadata = encoded_metadata.drop(columns=to_delete)
+    encoded_metadata = cf_analysis_lib.categories_to_numeric(metadata, sequence_type)
+    encoded_metadata = cf_analysis_lib.remove_highly_correlated_data(encoded_metadata, 0.9, sequence_type, True)
+    df = cf_analysis_lib.remove_highly_correlated_data(df, 0.9999, sequence_type=None, verbose=True)
 
     return df, encoded_metadata
 
-def remove_highly_correlated_variables(df, cutoff=0.9, verbose=False):
-    if verbose:
-        print("Calculating correlation matrix", file=sys.stderr)
-    correlation_matrix = df.corr(method='pearson')
-
-    # Find highly correlated pairs (absolute correlation > 0.8)
-    high_corr_abundance = correlation_matrix.unstack().reset_index()
-    high_corr_abundance.columns = ['From', 'To', 'Correlation']
-    high_corr_abundance = high_corr_abundance[
-        (high_corr_abundance['Correlation'].abs() > 0.9999) & (high_corr_abundance['From'] != high_corr_abundance['To'])
-        ]
-
-    # Drop duplicate pairs (e.g., (A, B) and (B, A))
-    high_corr_abundance = high_corr_abundance.drop_duplicates(subset=['Correlation'])
-
-    if verbose:
-        print(f"Dropping {len(high_corr_abundance['To'])} highly correlated variables", file=sys.stderr)
-    df = df.drop(columns=high_corr_abundance['To'])
-    return df
 
 def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterations=10000, output_file=None, include_culture_states=False, verbose=False):
     """
@@ -217,19 +167,22 @@ if __name__ == "__main__":
 
     df, encoded_metadata = read_data_frames(sequence_type=args.sequence_type, sslevel=args.sslevel, taxa=args.taxa, datadir=args.datadir, verbose=args.verbose)
 
-    df = remove_highly_correlated_variables(df, 0.9999)
-    encoded_metadata = remove_highly_correlated_variables(encoded_metadata.drop(columns=args.sequence_type), 0.9, verbose=args.verbose)
+    all_predictors = df.columns
+    dependent = re.sub(r'\W+', '_', args.dependent)
 
-    if args.dependent not in encoded_metadata.columns:
+    if dependent not in encoded_metadata.columns:
         print(
-            f"Error: {args.dependent} not in metadata so we can't predict it (check if it was dropped with --verbose)",
+            f"Error: {dependent} not in metadata so we can't predict it (check if it was dropped with --verbose)",
             file=sys.stderr)
         sys.exit(1)
 
     df_combined = df.merge(encoded_metadata, left_index=True, right_index=True, how='inner')
+    df_combined = df_combined.dropna(subset=[dependent, "pwCF_ID"])
 
-    all_predictors = df.columns
-    dependent = re.sub(r'\W+', '_', args.dependent)
+    if args.verbose:
+        print(f"Running lmm with {len(all_predictors)} predictors", file=sys.stderr)
+        print(f"Dependent variable is {dependent} with type {df_combined[dependent].dtypes}", file=sys.stderr)
+
 
     lmm(df=df_combined, dependent=dependent, all_predictors=all_predictors, num_predictors_per_model=args.predictors,
         num_iterations=args.iterations, output_file=args.output_file, include_culture_states=args.culture_states, verbose=args.verbose)
