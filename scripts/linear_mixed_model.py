@@ -97,8 +97,8 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             to_drop = list(df_combined_na.loc[:,df_combined_na.sum(axis=0) <1].columns)
         except TypeError as e:
             print(f"Error: {e} in iteration {i}", file=sys.stderr)
-            print(f"Columns: {list(df_combined_na.columns)}", file=sys.stderr)
-            print(f"dtypes: {list(df_combined_na.dtypes)}", file=sys.stderr)
+            for c in df_combined_na.columns:
+                print(f"{c}: {df_combined_na[c].dtype}", file=sys.stderr)
             sys.exit(1)
         # fourth, drop any columns without enough unique values
         rcn = df_combined_na[subset_predictors].nunique()
