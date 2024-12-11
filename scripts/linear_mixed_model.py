@@ -205,6 +205,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--predictors', help='number of predictors per model', type=int, default=100)
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
     parser.add_argument('-n', '--datadir', help='data directory', default='..')
+    parser.add_argument('-t', '--taxa', help='taxonomic level', default='family')
     parser.add_argument('-i', '--iterations', help='number of iterations', type=int, default=10000)
     parser.add_argument('-c', '--culture_states', help='include culture state (CS) metadata in the predictors', action='store_true')
 
@@ -213,7 +214,7 @@ if __name__ == "__main__":
 
     print(f"Running linear_mixed_model.py with arguments: {args}", file=sys.stderr)
 
-    df, encoded_metadata = read_data_frames(sequence_type=args.sequence_type, datadir=args.datadir, verbose=args.verbose)
+    df, encoded_metadata = read_data_frames(sequence_type=args.sequence_type, taxa=args.taxa, datadir=args.datadir, verbose=args.verbose)
 
     df = remove_highly_correlated_variables(df, 0.9999)
     encoded_metadata = remove_highly_correlated_variables(encoded_metadata.drop(columns=args.sequence_type), 0.9, verbose=args.verbose)
