@@ -127,22 +127,32 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                     groups=df_combined_na["pwCF_ID"]
                 )
                 result = model.fit()
-
-            df_result = pd.DataFrame({
-                "Predictor": result.params.index,
-                "Estimate": result.params.values,
-                "Std Err": result.bse.values,
-                "P-value": result.pvalues.values
-            })
-            df_result["Iteration"] = i  # Add iteration number for tracking
-
-            # Append to results
-            results.append(df_result)
         except Exception as e:
             print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
             if isinstance(e, NameError):
                 print(" ".join(list(df_combined_na.columns)))
                 sys.exit(1)
+            if isinstance(e, np.linalg.LinAlgError):
+                print(f"LinAlgError {e} in iteration {i}", file=sys.stderr)
+                for opt_method in 'BFGS', 'CG', 'COBYLA', 'Powell', 'trust-constr', 'trust-ncg':
+                    try:
+                        result = model.fit(method=opt_method)
+                        print(f"Success with {opt_method}", file=sys.stderr)
+                        break
+                    except Exception as e:
+                        print(f"Error with {opt_method}: {e}", file=sys.stderr)
+
+        df_result = pd.DataFrame({
+            "Predictor": result.params.index,
+            "Estimate": result.params.values,
+            "Std Err": result.bse.values,
+            "P-value": result.pvalues.values
+        })
+        df_result["Iteration"] = i  # Add iteration number for tracking
+
+        # Append to results
+        results.append(df_result)
+
 
     # Combine results into a single DataFrame
     all_results = pd.concat(results)
