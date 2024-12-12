@@ -137,7 +137,10 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             # Append to results
             results.append(df_result)
         except Exception as e:
-            print(f"Iteration {i} has error {e} formula: {formula}", file=sys.stderr)
+            print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
+            if isinstance(e, NameError):
+                print(" ".join(list(df_combined_na.columns)))
+                sys.exit(1)
 
     # Combine results into a single DataFrame
     all_results = pd.concat(results)
