@@ -121,6 +121,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
         else:
             formula = f"{dependent} ~ {' + '.join(updated_predictors)} "
 
+        result = None
         try:
             model = smf.mixedlm(
                 formula=formula,
@@ -129,6 +130,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 method='BFGS'
             )
             result = model.fit()
+
         except Exception as e:
             print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
             if isinstance(e, NameError):
@@ -138,12 +140,20 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 print(f"LinAlgError {e} in iteration {i}", file=sys.stderr)
                 for opt_method in 'Nelder-Mead', 'CG', 'COBYLA', 'Powell', 'trust-constr', 'trust-ncg':
                     try:
+                        model = smf.mixedlm(
+                            formula=formula,
+                            data=df_combined_na,
+                            groups=df_combined_na["pwCF_ID"],
+                            method='BFGS'
+                        )
                         result = model.fit(method=opt_method)
                         print(f"Success with {opt_method}", file=sys.stderr)
                         break
                     except Exception as e:
                         print(f"Error with {opt_method}: {e}", file=sys.stderr)
 
+        if result is None:
+            continue
         df_result = pd.DataFrame({
             "Predictor": result.params.index,
             "Estimate": result.params.values,
@@ -154,7 +164,6 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
 
         # Append to results
         results.append(df_result)
-
 
     # Combine results into a single DataFrame
     all_results = pd.concat(results)
