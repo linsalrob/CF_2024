@@ -121,20 +121,24 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
         else:
             formula = f"{dependent} ~ {' + '.join(updated_predictors)} "
 
+        model = smf.mixedlm(
+            formula=formula,
+            data=df_combined_na,
+            groups=df_combined_na["pwCF_ID"]
+        )
         result = None
-        try:
-            model = smf.mixedlm(
-                formula=formula,
-                data=df_combined_na,
-                groups=df_combined_na["pwCF_ID"]
-            )
-            result = model.fit(method=['bfgs', 'lbfgs', 'cg', 'powell '])
 
-        except Exception as e:
-            print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
-            if isinstance(e, NameError):
-                print(" ".join(list(df_combined_na.columns)))
-                sys.exit(1)
+        for meth in 'bfgs', 'lbfgs', 'cg', 'powell', 'nm':
+            try:
+                result = model.fit(method=meth)
+                break
+            except np.linalg.LinAlgError as e:
+                print(f"Method {meth} failed: {e}", file=sys.stderr)
+            except Exception as e:
+                print(f"Iteration {i} has error {e.__str__().rstrip()} formula: {formula}", file=sys.stderr)
+                if isinstance(e, NameError):
+                    print(" ".join(list(df_combined_na.columns)))
+                    sys.exit(1)
 
         if result is None:
             continue
