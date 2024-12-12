@@ -126,10 +126,9 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             model = smf.mixedlm(
                 formula=formula,
                 data=df_combined_na,
-                groups=df_combined_na["pwCF_ID"],
-                method='BFGS'
+                groups=df_combined_na["pwCF_ID"]
             )
-            result = model.fit()
+            result = model.fit(method='BFGS')
 
         except Exception as e:
             print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
@@ -143,8 +142,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                         model = smf.mixedlm(
                             formula=formula,
                             data=df_combined_na,
-                            groups=df_combined_na["pwCF_ID"],
-                            method='BFGS'
+                            groups=df_combined_na["pwCF_ID"]
                         )
                         result = model.fit(method=opt_method)
                         print(f"Success with {opt_method}", file=sys.stderr)
