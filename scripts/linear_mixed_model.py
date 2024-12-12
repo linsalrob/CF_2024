@@ -91,7 +91,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
         subset_predictors = random.sample(list(all_predictors), num_predictors_per_model)  # Randomly select predictors
         # second, drop any rows where the predictors have null values.
         # this will change the outcome of the next line!
-        df_combined_na = df_combined.dropna(subset=subset_predictors)
+        df_combined_na = df.dropna(subset=subset_predictors)
         # third, remove any columns whose column sum is 0
         try:
             to_drop = list(df_combined_na.loc[:,df_combined_na.sum(axis=0) <1].columns)
