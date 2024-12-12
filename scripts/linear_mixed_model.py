@@ -128,7 +128,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 data=df_combined_na,
                 groups=df_combined_na["pwCF_ID"]
             )
-            result = model.fit(method=['bfgs', 'lbfgs', 'cg', 'bfgs'])
+            result = model.fit(method=['bfgs', 'lbfgs', 'cg', 'powell '])
 
         except Exception as e:
             print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
