@@ -24,6 +24,10 @@ datadir = '..'
 sys.path.append('..')
 import cf_analysis_lib
 
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.filterwarnings(action='ignore', module='statsmodels')
+
+
 
 def read_data_frames(sequence_type = "MGI", datadir = "..", sslevel = "subsystems_norm_ss.tsv.gz",  taxa = "genus", verbose=False):
 
@@ -118,15 +122,13 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             formula = f"{dependent} ~ {' + '.join(updated_predictors)} "
 
         try:
-            with warnings.catch_warnings():
-                # this just suppresses some statsmodels warnings.
-                warnings.filterwarnings("ignore", module="statsmodels")
-                model = smf.mixedlm(
-                    formula=formula,
-                    data=df_combined_na,
-                    groups=df_combined_na["pwCF_ID"]
-                )
-                result = model.fit()
+            model = smf.mixedlm(
+                formula=formula,
+                data=df_combined_na,
+                groups=df_combined_na["pwCF_ID"],
+                method='BFGS'
+            )
+            result = model.fit()
         except Exception as e:
             print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
             if isinstance(e, NameError):
@@ -134,7 +136,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 sys.exit(1)
             if isinstance(e, np.linalg.LinAlgError):
                 print(f"LinAlgError {e} in iteration {i}", file=sys.stderr)
-                for opt_method in 'BFGS', 'CG', 'COBYLA', 'Powell', 'trust-constr', 'trust-ncg':
+                for opt_method in 'Nelder-Mead', 'CG', 'COBYLA', 'Powell', 'trust-constr', 'trust-ncg':
                     try:
                         result = model.fit(method=opt_method)
                         print(f"Success with {opt_method}", file=sys.stderr)
