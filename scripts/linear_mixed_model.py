@@ -128,27 +128,13 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 data=df_combined_na,
                 groups=df_combined_na["pwCF_ID"]
             )
-            result = model.fit(method='BFGS')
+            result = model.fit(method=['bfgs', 'lbfgs', 'cg', 'bfgs'])
 
         except Exception as e:
             print(f"Iteration {i} has error {e}\nformula: {formula}", file=sys.stderr)
             if isinstance(e, NameError):
                 print(" ".join(list(df_combined_na.columns)))
                 sys.exit(1)
-            if isinstance(e, np.linalg.LinAlgError):
-                print(f"LinAlgError {e} in iteration {i}", file=sys.stderr)
-                for opt_method in 'Nelder-Mead', 'CG', 'COBYLA', 'Powell', 'trust-constr', 'trust-ncg':
-                    try:
-                        model = smf.mixedlm(
-                            formula=formula,
-                            data=df_combined_na,
-                            groups=df_combined_na["pwCF_ID"]
-                        )
-                        result = model.fit(method=opt_method)
-                        print(f"Success with {opt_method}", file=sys.stderr)
-                        break
-                    except Exception as e:
-                        print(f"Error with {opt_method}: {e}", file=sys.stderr)
 
         if result is None:
             continue
