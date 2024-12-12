@@ -101,8 +101,9 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 print(f"{c}: {df_combined_na[c].dtype}", file=sys.stderr)
             sys.exit(1)
         # fourth, drop any columns without enough unique values
-        rcn = df_combined_na[subset_predictors].nunique()
-        to_drop += list(rcn[rcn < 10].index)
+        # we can't do this because it eliminates all the CS_ columns that are only 0 or 1
+        # rcn = df_combined_na[subset_predictors].nunique()
+        # to_drop += list(rcn[rcn < 10].index)
 
         if len(to_drop) > 0:
             df_combined_na = df_combined_na.drop(columns=to_drop)
@@ -111,7 +112,8 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
         updated_predictors = list(set(subset_predictors).intersection(df_combined_na.columns))
         
         if include_culture_states:
-            formula = f"{dependent} ~ {' + '.join(updated_predictors)} + {' + '.join(culture_states - {dependent})}"
+            updated_culture_states = culture_states.intersection(set(df_combined_na.columns))
+            formula = f"{dependent} ~ {' + '.join(updated_predictors)} + {' + '.join(updated_culture_states - {dependent})}"
         else:
             formula = f"{dependent} ~ {' + '.join(updated_predictors)} "
 
