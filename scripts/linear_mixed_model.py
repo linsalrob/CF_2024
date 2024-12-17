@@ -113,7 +113,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
             df_combined_na = df_combined_na.drop(columns=to_drop)
         
         # fourth, make sure all the predictors are still present
-        updated_predictors = list(set(subset_predictors).intersection(df_combined_na.columns))
+        updated_predictors = list(set(subset_predictors).intersection(set(df_combined_na.columns)))
         
         if include_culture_states:
             updated_culture_states = culture_states.intersection(set(df_combined_na.columns))
@@ -133,7 +133,7 @@ def lmm(df, dependent, all_predictors, num_predictors_per_model=100, num_iterati
                 result = model.fit(method=meth)
                 break
             except np.linalg.LinAlgError as e:
-                print(f"Method {meth} failed: {e}", file=sys.stderr)
+                print(f"Iteration {i} Method {meth} failed: {e}", file=sys.stderr)
             except Exception as e:
                 print(f"Iteration {i} has error {e.__str__().rstrip()} formula: {formula}", file=sys.stderr)
                 if isinstance(e, NameError):
