@@ -9,6 +9,7 @@ Includes support for:
 import os
 import sys
 import pandas as pd
+from sklearn.impute import SimpleImputer
 
 from .metadata_data import metadata_definitions
 
@@ -35,28 +36,6 @@ corrections = {
         }
 }
 
-pathogens = {
-    "Acinetobacter",
-    "Actinomyces",
-    "Bordetella",
-    "Burkholderia",
-    "Chlamydia",
-    "Corynebacterium",
-    "Escherichia",
-    "Francisella",
-    "Haemophilus",
-    "Klebsiella",
-    "Legionella",
-    "Moraxella",
-    "Mycobacterium",
-    "Mycoplasma",
-    "Neisseria",
-    "Nocardia",
-    "Pasteurella",
-    "Pseudomonas",
-    "Staphylococcus",
-    "Streptococcus"
-}
 
 def read_taxonomy(datadir, sequence_type, taxonomy):
     """
@@ -115,13 +94,24 @@ def read_metadata(datadir, sequence_type, categorise=False):
                 metadata.loc[ix, seq_type] = corrections[seq_type][s]
 
     if categorise:
+        # impute missing values by most frequent (i.e. mode)
+        imputer = SimpleImputer(strategy='most_frequent')
+        mean_imputer = SimpleImputer(strategy='mean')
         # convert the metadata to categories!
         mdx_types = metadata_definitions()
         for c in metadata.columns:
             if c in mdx_types and mdx_types[c] == 'Categorical':
                 metadata[c] = metadata[c].astype('category')
-            if c in mdx_types and mdx_types[c] == 'Date':
+                metadata[c] = imputer.fit(metadata[c])
+            elif c in mdx_types and mdx_types[c] == 'Date':
                 metadata[c] = pd.to_datetime(metadata[c])
+            else:
+                metadata[c] = mean_imputer.fit_transform(metadata[[c]])
+    else:
+        # impute missing values by mean
+        imputer = SimpleImputer(strategy='mean')
+        metadata = imputer.fit_transform(metadata)
+
 
     return metadata
 
