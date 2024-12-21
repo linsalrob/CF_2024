@@ -210,6 +210,10 @@ if __name__ == "__main__":
     parser.add_argument('-r', '--results', help='results file', required=True)
     parser.add_argument('-n', '--iterations', help='number of iterations', type=int, default=100)
     parser.add_argument('-i', '--images', help='image directory', default='gb_images')
+    parser.add_argument('-d', '--datadir', help='data directory', default='..')
+    parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
+    parser.add_argument('-l', '--sslevel', help='subsystem level', default='subsystems_norm_ss.tsv.gz')
+    parser.add_argument('-t', '--taxa', help='taxonomic level', default='family')
     parser.add_argument('-v', help='verbose output', action='store_true')
     args = parser.parse_args()
 
@@ -219,7 +223,8 @@ if __name__ == "__main__":
 
     os.makedirs(args.images, exist_ok=True)
 
-    df, metadata = read_the_data("MGI", datadir='..')
+    df, metadata = read_the_data(sequence_type=args.sequence_type, datadir=args.datadir, sslevel=args.sslevel,
+                                 taxa=args.taxa)
 
     replace_index = re.compile(r'^\d+\s+')
     replace_nonword = re.compile(r'\W+')
