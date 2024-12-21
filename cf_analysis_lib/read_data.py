@@ -102,7 +102,7 @@ def read_metadata(datadir, sequence_type, categorise=False):
         for c in metadata.columns:
             if c in mdx_types and mdx_types[c] == 'Categorical':
                 metadata[c] = metadata[c].astype('category')
-                metadata[c] = imputer.fit(metadata[[c]])
+                metadata[c] = imputer.fit_transform(metadata[[c]])
             elif c in mdx_types and mdx_types[c] == 'Date':
                 metadata[c] = pd.to_datetime(metadata[c])
             elif pd.api.types.is_numeric_dtype(metadata[c]):
