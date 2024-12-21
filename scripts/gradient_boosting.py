@@ -214,7 +214,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
     parser.add_argument('-l', '--sslevel', help='subsystem level', default='subsystems_norm_ss.tsv.gz')
     parser.add_argument('-t', '--taxa', help='taxonomic level', default='family')
-    parser.add_argument('-v', help='verbose output', action='store_true')
+    parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
 
     if os.path.exists(args.r):
