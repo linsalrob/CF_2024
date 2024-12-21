@@ -238,7 +238,7 @@ if __name__ == "__main__":
         intcol_filename = intcol.replace(" ", "_")
         intcol_filename = replace_nonword.sub('', intcol_filename)
 
-        merged_df = df.join(metadata[[intcol]])
+        merged_df = df.join(metadata[[intcol]]).dropna(subset=[intcol])
 
 
         X = merged_df.drop(intcol, axis=1)
