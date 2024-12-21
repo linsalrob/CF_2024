@@ -217,8 +217,8 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
 
-    if os.path.exists(args.r):
-        print(f"Error: {args.r} already exists. Cowardly not overwriting", file=sys.stderr)
+    if os.path.exists(args.results):
+        print(f"Error: {args.results} already exists. Cowardly not overwriting", file=sys.stderr)
         sys.exit(1)
 
     os.makedirs(args.images, exist_ok=True)
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     replace_index = re.compile(r'^\d+\s+')
     replace_nonword = re.compile(r'\W+')
 
-    resultsfile = open(args.r, 'w')
+    resultsfile = open(args.results, 'w')
     print(f"Predictor\tFeature\tAvg. Importance\tNumber of iterations (out of {args.iterations})", file=resultsfile)
 
     for intcol in df.columns:
