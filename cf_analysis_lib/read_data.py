@@ -108,7 +108,10 @@ def read_metadata(datadir, sequence_type, categorise=False):
             elif pd.api.types.is_numeric_dtype(metadata[c]):
                 metadata[c] = mean_imputer.fit_transform(metadata[[c]])
             else:
-                metadata[c] = imputer.fit_transform(metadata[[c]])
+                try:
+                    metadata[c] = imputer.fit_transform(metadata[[c]])
+                except ValueError as e:
+                    print(f"Error imputing {c}: {e}")
     else:
         for c in metadata.columns:
             if pd.api.types.is_numeric_dtype(metadata[c]):
