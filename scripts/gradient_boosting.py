@@ -232,13 +232,14 @@ if __name__ == "__main__":
     resultsfile = open(args.results, 'w')
     print(f"Predictor\tFeature\tAvg. Importance\tNumber of iterations (out of {args.iterations})", file=resultsfile)
 
-    for intcol in df.columns:
+    for intcol in metadata.columns:
         print(f"Working on {intcol}", file=sys.stderr)
         intcol_title = replace_index.sub('', intcol)
         intcol_filename = intcol.replace(" ", "_")
         intcol_filename = replace_nonword.sub('', intcol_filename)
 
         merged_df = df.join(metadata[[intcol]])
+
 
         X = merged_df.drop(intcol, axis=1)
         y = merged_df[intcol]
