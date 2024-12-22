@@ -234,6 +234,10 @@ if __name__ == "__main__":
 
     for intcol in metadata.columns:
         print(f"Working on {intcol}", file=sys.stderr)
+        if not pd.api.types.is_numeric_dtype(metadata[intcol]):
+            print(f"Skipping {intcol} as it is not numeric", file=sys.stderr)
+            continue
+
         intcol_title = replace_index.sub('', intcol)
         intcol_filename = intcol.replace(" ", "_")
         intcol_filename = replace_nonword.sub('', intcol_filename)
