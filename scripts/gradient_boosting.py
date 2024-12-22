@@ -276,16 +276,17 @@ if __name__ == "__main__":
         plot_feature_importance(axes[0], tfdf[:n][::-1], "")
         plot_feature_abundance(axes[1], merged_df[topN][::-1], intcol, intcol_title)
 
-        custom_labels = {0: 'No', 1: 'Yes'}
+        #custom_labels = {0: 'No', 1: 'Yes'}
         handles, labels = axes[1].get_legend_handles_labels()  # Get one set of handles and labels
-        updated_labels = [custom_labels[int(label)] for label in labels]
+        #updated_labels = [custom_labels[int(label)] for label in labels]
 
         for ax in axes.flat:
             if ax.get_legend() is not None:  # Check if legend exists
                 ax.get_legend().remove()
 
         plt.xticks(rotation=90)
-        fig.legend(handles, updated_labels, loc='upper center', ncol=2, fontsize=12, title="Antibiotic Usage")
+        fig.legend(handles, labels, loc='upper center', title=intcol_title)
+        #fig.legend(handles, updated_labels, loc='upper center', ncol=2, fontsize=12, title="Antibiotic Usage")
         plt.tight_layout(rect=[0, 0, 1, 0.9])
         plt.savefig(f"{args.images}/{intcol_filename}.png")
 
