@@ -209,6 +209,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=' ')
     parser.add_argument('-r', '--results', help='results file', required=True)
     parser.add_argument('-n', '--iterations', help='number of iterations', type=int, default=100)
+    parser.add_argument('-e', '--nestimators', help='number of estimators', type=int, default=200)
     parser.add_argument('-i', '--images', help='image directory', default='gb_images')
     parser.add_argument('-d', '--datadir', help='data directory', default='..')
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
@@ -253,10 +254,10 @@ if __name__ == "__main__":
         top_feature_counts = {}
         for i in range(args.iterations):
             if metadata[intcol].dtype == 'object':
-                mse, feature_importances_sorted = gb_classifier(X, y)
+                mse, feature_importances_sorted = gb_classifier(X, y, n_estimators=args.nestimators)
                 met = 'classifier'
             else:
-                mse, feature_importances_sorted = gb_regressor(X, y)
+                mse, feature_importances_sorted = gb_regressor(X, y, n_estimators=args.nestimators)
                 met = 'regressor'
 
             for f in feature_importances_sorted.index[:n]:
