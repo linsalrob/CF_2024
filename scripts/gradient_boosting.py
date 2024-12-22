@@ -248,6 +248,7 @@ if __name__ == "__main__":
         X = merged_df.drop(intcol, axis=1)
         y = merged_df[intcol]
 
+        n = 20
         top_features = {}
         top_feature_counts = {}
         for i in range(args.iterations):
@@ -269,7 +270,7 @@ if __name__ == "__main__":
 
         tfdf = pd.DataFrame.from_dict(top_features, orient="index", columns=["importance"]).sort_values(by='importance',
                                                                                                         ascending=False)
-        n = 20
+
         topN = list(tfdf[:n].index) + [intcol]
         fig, axes = plt.subplots(figsize=(10, 6), nrows=1, ncols=2, sharey='row', sharex='col')
         plot_feature_importance(axes[0], tfdf[:n][::-1], "")
