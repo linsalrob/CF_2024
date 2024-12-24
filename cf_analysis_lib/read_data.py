@@ -94,26 +94,16 @@ def read_metadata(datadir, sequence_type, categorise=False):
                 metadata.loc[ix, seq_type] = corrections[seq_type][s]
 
     # impute missing values by most frequent (i.e. mode)
-    imputer = SimpleImputer(strategy='most_frequent')
-    mean_imputer = SimpleImputer(strategy='mean')
+    # imputer = SimpleImputer(strategy='most_frequent')
+    # mean_imputer = SimpleImputer(strategy='mean')
     if categorise:
         # convert the metadata to categories!
         mdx_types = metadata_definitions()
         for c in metadata.columns:
             if c in mdx_types and mdx_types[c] == 'Categorical':
                 metadata[c] = metadata[c].astype('category')
-                #metadata[c] = imputer.fit_transform(metadata[[c]])
-                metadata[c].fillna(value='-1', inplace=True)
             elif c in mdx_types and mdx_types[c] == 'Date':
                 metadata[c] = pd.to_datetime(metadata[c])
-            elif pd.api.types.is_numeric_dtype(metadata[c]):
-                metadata[c].fillna(value=-1, inplace=True)
-                #metadata[c] = mean_imputer.fit_transform(metadata[[c]])
-    else:
-        for c in metadata.columns:
-            if pd.api.types.is_numeric_dtype(metadata[c]):
-                # metadata[c] = mean_imputer.fit_transform(metadata[[c]])
-                metadata[c].fillna(value=-1, inplace=True)
 
     return metadata
 
