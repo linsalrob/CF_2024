@@ -63,7 +63,7 @@ def read_taxonomy(datadir, sequence_type, taxonomy):
     df = df.sort_index(axis=1)
     return df
 
-def read_metadata(datadir, sequence_type, categorise=False):
+def read_metadata(datadir, sequence_type, categorise=False, verbose=False):
     """
     Read the metadata file and return a data frame
     """
@@ -97,6 +97,8 @@ def read_metadata(datadir, sequence_type, categorise=False):
     # imputer = SimpleImputer(strategy='most_frequent')
     # mean_imputer = SimpleImputer(strategy='mean')
     if categorise:
+        if verbose:
+            print(f"Converting {c} to category. Make sure to dropna(axis=1)", file=sys.stderr)
         # convert the metadata to categories!
         mdx_types = metadata_definitions()
         for c in metadata.columns:
