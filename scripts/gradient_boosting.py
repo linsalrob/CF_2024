@@ -5,43 +5,24 @@ The gradient boosting notebook, but as a script so we can run it for extended pe
 import os
 import sys
 import argparse
+from socket import gethostname
 
 import re
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
-import matplotlib.colors as mcolors
-import matplotlib.dates as mdates
-from matplotlib.colors import ListedColormap
 import pandas as pd
 import seaborn as sns
-import json
-import random
 
-from itertools import cycle
-
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder, OrdinalEncoder
-from sklearn.inspection import permutation_importance
-from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import MinMaxScaler
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingClassifier, GradientBoostingRegressor
-from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor, ClassifierChain
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-
-from scipy.stats import linregress
-
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-
 
 # there is a FutureWarning in sklearn StandardScalar which is really annoying. This ignores it.
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-from socket import gethostname
 hostname = gethostname()
 if hostname.startswith('hpc-node'):
     IN_DEEPTHOUGHT = True
@@ -172,7 +153,8 @@ def plot_feature_abundance(ax, feature_df, intcol, title):
 
     use something like this:
     top20 = list(feature_importances_sorted[:20].index)+[intcol]
-    plot_feature_abundance(ax, merged_df[top20], intcol, f"Plot of normalised measures that are important to distinguish '{intcol}' usage")
+    plot_feature_abundance(ax, merged_df[top20], intcol, f"Plot of normalised measures that are important to
+    distinguish '{intcol}' usage")
     """
 
     # before we plot the data we scale the data to make the mean 0 and the variance 1.
@@ -192,7 +174,8 @@ def plot_feature_abundance(ax, feature_df, intcol, title):
     ax.set_xlabel('Normalised Abundance')
     ax.set_ylabel('')
 
-def read_the_data(sequence_type, datadir, sslevel = 'subsystems_norm_ss.tsv.gz', taxa = "family"):
+
+def read_the_data(sequence_type, datadir, sslevel='subsystems_norm_ss.tsv.gz', taxa="family"):
 
     ss_df = cf_analysis_lib.read_subsystems(
         os.path.join(datadir, sequence_type, "FunctionalAnalysis", "subsystems", sslevel), sequence_type)
@@ -205,11 +188,14 @@ def read_the_data(sequence_type, datadir, sslevel = 'subsystems_norm_ss.tsv.gz',
 
     return df, metadata
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=' ')
     parser.add_argument('-r', '--results', help='results file', required=True)
     parser.add_argument('-n', '--iterations', help='number of iterations', type=int, default=100)
     parser.add_argument('-e', '--nestimators', help='number of estimators', type=int, default=200)
+    parser.add_argument('-f', '--features', help='number of features to count and summarise', type=int, default=20)
+    parser.add_argument('-y', '--image_features', help='number of features to plot', type=int, default=20)
     parser.add_argument('-i', '--images', help='image directory', default='gb_images')
     parser.add_argument('-d', '--datadir', help='data directory', default='..')
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
@@ -245,13 +231,13 @@ if __name__ == "__main__":
 
         merged_df = df.join(metadata[[intcol]]).dropna(subset=[intcol])
 
-
         X = merged_df.drop(intcol, axis=1)
         y = merged_df[intcol]
 
-        n = 20
+        list_features = args.features
         top_features = {}
         top_feature_counts = {}
+        met = None
         for i in range(args.iterations):
             if metadata[intcol].dtype == 'object':
                 mse, feature_importances_sorted = gb_classifier(X, y, n_estimators=args.nestimators)
@@ -260,34 +246,44 @@ if __name__ == "__main__":
                 mse, feature_importances_sorted = gb_regressor(X, y, n_estimators=args.nestimators)
                 met = 'regressor'
 
-            for f in feature_importances_sorted.index[:n]:
+            for f in feature_importances_sorted.index[:list_features]:
                 top_features[f] = top_features.get(f, 0) + feature_importances_sorted.loc[f, 'importance']
                 top_feature_counts[f] = top_feature_counts.get(f, 0) + 1
 
         sorted_top_feats = sorted(top_features, key=lambda x: top_features[x], reverse=True)
-        for x in sorted_top_feats[:10]:
-            print(f"{intcol}\t{x}\t{top_features[x] / args.iterations : .4f}\t\t{top_feature_counts[x]}", file=resultsfile)
+        print(f"Top {list_features} features appearing in the {args.iterations} gradient boosted random forests "
+              f"for {intcol} using {met} are:", file=resultsfile)
+        for x in sorted_top_feats[:list_features]:
+            print(f"{intcol}\t{x}\t{top_features[x] / args.iterations : .4f}\t\t{top_feature_counts[x]}",
+                  file=resultsfile)
 
-
+        y_features = args.image_features
         tfdf = pd.DataFrame.from_dict(top_features, orient="index", columns=["importance"]).sort_values(by='importance',
                                                                                                         ascending=False)
 
-        topN = list(tfdf[:n].index) + [intcol]
+        topN = list(tfdf[:y_features].index) + [intcol]
         fig, axes = plt.subplots(figsize=(10, 6), nrows=1, ncols=2, sharey='row', sharex='col')
-        plot_feature_importance(axes[0], tfdf[:n][::-1], "")
+        plot_feature_importance(axes[0], tfdf[:y_features][::-1], "")
         plot_feature_abundance(axes[1], merged_df[topN][::-1], intcol, intcol_title)
 
-        #custom_labels = {0: 'No', 1: 'Yes'}
+        custom_labels = {0: 'No', 1: 'Yes', '0.0': 'No', '1.0': 'Yes', '0': 'No', '1': 'Yes'}
         handles, labels = axes[1].get_legend_handles_labels()  # Get one set of handles and labels
-        #updated_labels = [custom_labels[int(label)] for label in labels]
+        updated_labels = labels
+        try:
+            updated_labels = [custom_labels[int(label)] for label in labels]
+        except ValueError as e:
+            print(f"Couldn't use int for labels {e}. Trying str", file=sys.stderr)
+            try:
+                updated_labels = [custom_labels[str(label)] for label in labels]
+            except ValueError as e:
+                print(f"Couldn't use str for labels {e}. Labels: {labels}", file=sys.stderr)
 
         for ax in axes.flat:
             if ax.get_legend() is not None:  # Check if legend exists
                 ax.get_legend().remove()
 
         plt.xticks(rotation=90)
-        fig.legend(handles, labels, loc='upper center', title=intcol_title)
-        #fig.legend(handles, updated_labels, loc='upper center', ncol=2, fontsize=12, title="Antibiotic Usage")
+        fig.legend(handles, updated_labels, loc='upper center', ncol=2, title=intcol_title)
         plt.tight_layout(rect=[0, 0, 1, 0.9])
         plt.savefig(f"{args.images}/{intcol_filename}.png")
 
