@@ -11,5 +11,21 @@ eval "$(conda shell.bash hook)"
 conda activate bioinformatics
 export PYTHONPATH=$PYTHONPATH:$HOME/GitHubs/CF_Data_Analysis
 
+# usage: gradient_boosting.py [-h] -r RESULTS [-n ITERATIONS] [-e NESTIMATORS] [-f FEATURES] [-y IMAGE_FEATURES] [-i IMAGES] [-d DATADIR] [-s SEQUENCE_TYPE] [-l SSLEVEL] [-t TAXA] [-v]
+# gradient_boosting.py: error: the following arguments are required: -r/--results
 
-python /home/edwa0468/GitHubs/CF_Data_Analysis/scripts/gradient_boosting.py -r gb_1000_1000_family_ss.tsv -n 1000 -i gb_1000_1000_family_ss_images -e 1000 --sequence_type MGI --taxa family --verbose --datadir '../..' 
+ITERATIONS=1000
+ESTIMATORS=1000
+TAXA=family
+python /home/edwa0468/GitHubs/CF_Data_Analysis/scripts/gradient_boosting.py \
+				-r gb_${ITERATIONS}_${ESTIMATORS}_${TAXA}_ss.tsv \
+				-i gb_${ITERATIONS}_${ESTIMATORS}_${TAXA}_ss_images \
+				-n $ITERATIONS \
+				-e $ESTIMATORS \
+				-y 20 \
+				-f 100 \
+				--sequence_type MGI \
+				--taxa $TAXA \
+				--verbose \
+				--datadir '../..' \
+				--printall
