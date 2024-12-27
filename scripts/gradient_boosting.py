@@ -195,6 +195,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--iterations', help='number of iterations', type=int, default=100)
     parser.add_argument('-e', '--nestimators', help='number of estimators', type=int, default=200)
     parser.add_argument('-f', '--features', help='number of features to count and summarise', type=int, default=20)
+    parser.add_argument('--printall', help='print all features with occurrence >= 1', action='store_true')
     parser.add_argument('-y', '--image_features', help='number of features to plot', type=int, default=20)
     parser.add_argument('-i', '--images', help='image directory', default='gb_images')
     parser.add_argument('-d', '--datadir', help='data directory', default='..')
@@ -219,7 +220,12 @@ if __name__ == "__main__":
     resultsfile = open(args.results, 'w')
     print(f"Predictor\tFeature\tAvg. Importance\tNumber of iterations (out of {args.iterations})", file=resultsfile)
 
+    skip_columns = {'minion', 'MGI', 'pwCF_ID'}
+
+
     for intcol in metadata.columns:
+        if intcol in skip_columns:
+            continue
         print(f"Working on {intcol}", file=sys.stderr)
         if not pd.api.types.is_numeric_dtype(metadata[intcol]):
             print(f"Skipping {intcol} as it is not numeric", file=sys.stderr)
@@ -251,11 +257,18 @@ if __name__ == "__main__":
                 top_feature_counts[f] = top_feature_counts.get(f, 0) + 1
 
         sorted_top_feats = sorted(top_features, key=lambda x: top_features[x], reverse=True)
-        print(f"Top {list_features} features appearing in the {args.iterations} gradient boosted random forests "
-              f"for {intcol} using {met} are:", file=resultsfile)
-        for x in sorted_top_feats[:list_features]:
-            print(f"{intcol}\t{x}\t{top_features[x] / args.iterations : .4f}\t\t{top_feature_counts[x]}",
-                  file=resultsfile)
+        if args.printall:
+            print(f"Features appearing in the top {list_features} features at least once", file=resultsfile)
+            for x in sorted_top_feats:
+                if top_features[x] > 0:
+                    print(f"{intcol}\t{x}\t{top_features[x] / args.iterations : .4f}\t\t{top_feature_counts[x]}",
+                          file=resultsfile)
+        else:
+            print(f"Top {list_features} features appearing in the {args.iterations} gradient boosted random forests "
+                  f"for {intcol} using {met} are:", file=resultsfile)
+            for x in sorted_top_feats[:list_features]:
+                print(f"{intcol}\t{x}\t{top_features[x] / args.iterations : .4f}\t\t{top_feature_counts[x]}",
+                      file=resultsfile)
 
         y_features = args.image_features
         tfdf = pd.DataFrame.from_dict(top_features, orient="index", columns=["importance"]).sort_values(by='importance',
@@ -271,11 +284,11 @@ if __name__ == "__main__":
         updated_labels = labels
         try:
             updated_labels = [custom_labels[int(label)] for label in labels]
-        except ValueError as e:
+        except Exception as e:
             print(f"Couldn't use int for labels {e}. Trying str", file=sys.stderr)
             try:
                 updated_labels = [custom_labels[str(label)] for label in labels]
-            except ValueError as e:
+            except Exception as e:
                 print(f"Couldn't use str for labels {e}. Labels: {labels}", file=sys.stderr)
 
         for ax in axes.flat:
