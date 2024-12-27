@@ -15,6 +15,7 @@ import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import mean_squared_error
@@ -227,15 +228,34 @@ if __name__ == "__main__":
         if intcol in skip_columns:
             continue
         print(f"Working on {intcol}", file=sys.stderr)
-        if not pd.api.types.is_numeric_dtype(metadata[intcol]):
-            print(f"Skipping {intcol} as it is not numeric", file=sys.stderr)
-            continue
 
+        # set up our titles and the filename
         intcol_title = replace_index.sub('', intcol)
         intcol_filename = intcol.replace(" ", "_")
         intcol_filename = replace_nonword.sub('', intcol_filename)
 
         merged_df = df.join(metadata[[intcol]]).dropna(subset=[intcol])
+
+        # do we need to encode this column
+        custom_labels = {0: 'No', 1: 'Yes'}
+        if pd.api.types.is_numeric_dtype(metadata[intcol]):
+            # this is an numeric column, so we can just continue
+            pass
+        elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype) and pd.api.types.is_numeric_dtype(metadata[intcol].cat.categories.dtype):
+            # this is a categorical column with numeric categories so we can also continue
+            pass
+        elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype):
+            # this is a categorical column with string categories so we need to encode it
+            enc = OrdinalEncoder()
+            metadata_encoder = enc.fit(metadata[[intcol]])
+            categories = metadata_encoder.categories_[0]
+            custom_labels = {code: cat for code, cat in enumerate(categories)}
+            merged_df[intcol] = metadata_encoder.transform(metadata[[intcol]])
+        else:
+            # not sure what this is, so we skip it for now
+            print(f"Error: {intcol} is not a numeric or categorical column, so we skipped it", file=sys.stderr)
+            continue
+
 
         X = merged_df.drop(intcol, axis=1)
         y = merged_df[intcol]
@@ -244,6 +264,7 @@ if __name__ == "__main__":
         top_features = {}
         top_feature_counts = {}
         met = None
+        msesum = 0
         for i in range(args.iterations):
             if metadata[intcol].dtype == 'object':
                 mse, feature_importances_sorted = gb_classifier(X, y, n_estimators=args.nestimators)
@@ -256,6 +277,9 @@ if __name__ == "__main__":
                 top_features[f] = top_features.get(f, 0) + feature_importances_sorted.loc[f, 'importance']
                 top_feature_counts[f] = top_feature_counts.get(f, 0) + 1
 
+            msesum += mse
+
+        print(f"Averaged mean squared error for {intcol} using {met} is {msesum / args.iterations}", file=resultsfile)
         sorted_top_feats = sorted(top_features, key=lambda x: top_features[x], reverse=True)
         if args.printall:
             print(f"Features appearing in the top {list_features} features at least once", file=resultsfile)
@@ -279,17 +303,13 @@ if __name__ == "__main__":
         plot_feature_importance(axes[0], tfdf[:y_features][::-1], "")
         plot_feature_abundance(axes[1], merged_df[topN][::-1], intcol, intcol_title)
 
-        custom_labels = {0: 'No', 1: 'Yes', '0.0': 'No', '1.0': 'Yes', '0': 'No', '1': 'Yes'}
+
         handles, labels = axes[1].get_legend_handles_labels()  # Get one set of handles and labels
         updated_labels = labels
         try:
-            updated_labels = [custom_labels[int(label)] for label in labels]
+            updated_labels = [custom_labels[float(label)] for label in labels]
         except Exception as e:
-            print(f"Couldn't use int for labels {e}. Trying str", file=sys.stderr)
-            try:
-                updated_labels = [custom_labels[str(label)] for label in labels]
-            except Exception as e:
-                print(f"Couldn't use str for labels {e}. Labels: {labels}", file=sys.stderr)
+            print(f"Couldn't use float for labels {e}.", file=sys.stderr)
 
         for ax in axes.flat:
             if ax.get_legend() is not None:  # Check if legend exists
