@@ -73,7 +73,13 @@ def gb_classifier(X, y, n_estimators=200):
 def gb_regressor(X, y, n_estimators=200):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    model = GradientBoostingRegressor(max_features="sqrt", n_estimators=n_estimators)
+    model = GradientBoostingRegressor(
+        max_features = "sqrt",
+        n_estimators = n_estimators,
+        learning_rate = 0.005,
+        min_samples_leaf = 10,
+        max_depth = 5
+    )
     model.fit(X_train, y_train)
 
     # Make predictions on the test set
