@@ -238,12 +238,13 @@ if __name__ == "__main__":
 
         # do we need to encode this column
         custom_labels = {0: 'No', 1: 'Yes'}
+        categorical_data = False
         if pd.api.types.is_numeric_dtype(metadata[intcol]):
             # this is an numeric column, so we can just continue
             pass
         elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype) and pd.api.types.is_numeric_dtype(metadata[intcol].cat.categories.dtype):
             # this is a categorical column with numeric categories so we can also continue
-            pass
+            categorical_data = True
         elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype):
             # this is a categorical column with string categories so we need to encode it
             enc = OrdinalEncoder()
@@ -251,6 +252,7 @@ if __name__ == "__main__":
             categories = metadata_encoder.categories_[0]
             custom_labels = {code: cat for code, cat in enumerate(categories)}
             merged_df[intcol] = metadata_encoder.transform(metadata[[intcol]])
+            categorical_data = True
         else:
             # not sure what this is, so we skip it for now
             print(f"Error: {intcol} is not a numeric or categorical column, so we skipped it", file=sys.stderr)
@@ -266,7 +268,7 @@ if __name__ == "__main__":
         met = None
         msesum = 0
         for i in range(args.iterations):
-            if metadata[intcol].dtype == 'object':
+            if categorical_data or metadata[intcol].dtype == 'object':
                 mse, feature_importances_sorted = gb_classifier(X, y, n_estimators=args.nestimators)
                 met = 'classifier'
             else:
