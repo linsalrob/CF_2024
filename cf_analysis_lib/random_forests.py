@@ -144,7 +144,8 @@ def plot_feature_abundance(ax, feature_df, intcol, title):
     # you can compare the values before and after by looking at merged_df[top20].max() and  scaled_df.max()
     # scaler = StandardScaler()
     scaler = MinMaxScaler()
-    scaled_df = pd.DataFrame(scaler.fit_transform(feature_df), columns=feature_df.columns)
+    tmpdf = feature_df.drop(intcol, axis=1)
+    scaled_df = pd.DataFrame(scaler.fit_transform(tmpdf), columns=tmpdf.columns)
     scaled_df[intcol] = feature_df[intcol].values
 
     melted_df = pd.melt(scaled_df, id_vars=[intcol], var_name='Feature', value_name='Value')
