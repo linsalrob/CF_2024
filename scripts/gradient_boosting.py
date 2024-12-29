@@ -227,7 +227,7 @@ if __name__ == "__main__":
     resultsfile = open(args.results, 'w')
     print(f"Predictor\tFeature\tAvg. Importance\tNumber of iterations (out of {args.iterations})", file=resultsfile)
 
-    skip_columns = {'minion', 'MGI', 'pwCF_ID'}
+    skip_columns = {'minion', 'MGI', 'pwCF_ID', 'Sample_Type'}
 
 
     for intcol in metadata.columns:
