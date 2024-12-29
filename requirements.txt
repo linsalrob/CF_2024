@@ -1,3 +1,6 @@
+adjustText
+fastcluster
+python-louvain
 jupyter
 matplotlib
 natsort
@@ -7,4 +10,3 @@ scipy
 scikit-learn
 seaborn
 statsmodels
-
