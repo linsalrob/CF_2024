@@ -4,6 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=128G
+#SBATCH --partition=high-capacity
+#SBATCH --qos=hc-concurrent-jobs
 #SBATCH -o gb-%j.out
 #SBATCH -e gb-%j.err
 
