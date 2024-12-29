@@ -182,6 +182,6 @@ def plot_top_features(merged_df, top_features, top_feature_counts, intcol, intco
             ax.get_legend().remove()
 
     plt.xticks(rotation=90)
-    fig.legend(handles, updated_labels, loc='upper center', ncol=2, fontsize=12, title="Antibiotic Usage")
+    fig.legend(handles, updated_labels, loc='upper center', ncol=2, title=intcol_title)
     plt.tight_layout(rect=[0, 0, 1, 0.9])
     plt.show()
