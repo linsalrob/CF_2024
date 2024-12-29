@@ -147,3 +147,24 @@ def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
     sboth = sboth.sort_index(axis=1) # sort by column names
 
     return sboth
+
+def read_the_data(sequence_type, datadir, sslevel='subsystems_norm_ss.tsv.gz', taxa="family"):
+    """
+    Read the data and return the data frame and metadata
+    :param sequence_type: MGI or MinION
+    :param datadir: where is the data
+    :param sslevel: subsystems level to read
+    :param taxa: taxonomy level to read
+    :return: two dataframes, data and metadata
+    """
+
+    ss_df = read_subsystems(
+        os.path.join(datadir, sequence_type, "FunctionalAnalysis", "subsystems", sslevel), sequence_type)
+    ss_df = ss_df.T
+    genus_otu = read_taxonomy(datadir, sequence_type, taxa)
+    genus_otu = genus_otu.T
+    df = ss_df.merge(genus_otu, left_index=True, right_index=True, how='inner')
+
+    metadata = read_metadata(datadir, sequence_type, categorise=True)
+
+    return df, metadata
