@@ -15,11 +15,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
-n_estimators = 10000
 
 
 
-def gb_classifier(X, y):
+
+def gb_classifier(X, y, n_estimators=10000):
+    """
+    Run a classifier for categorical data and return the mean squared error and the feature importances
+    """
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     model = GradientBoostingClassifier(
@@ -53,7 +57,11 @@ def gb_classifier(X, y):
     return mse, feature_importances_sorted
 
 
-def gb_regressor(X, y):
+def gb_regressor(X, y, n_estimators=10000):
+    """
+    Run a regressor for continuous data and return the mean squared error and the feature importances
+    """
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     model = GradientBoostingRegressor(max_features="sqrt", n_estimators=n_estimators)
@@ -71,7 +79,7 @@ def gb_regressor(X, y):
     return mse, feature_importances_sorted
 
 
-def random_forest_regression(X, y):
+def random_forest_regression(X, y, n_estimators=10000):
     """
     Run a regressor for continuous data and return the mean squared error and the feature importances
     """
@@ -95,7 +103,7 @@ def random_forest_regression(X, y):
     return mse, feature_importances_sorted
 
 
-def random_forest_classifier(X, y):
+def random_forest_classifier(X, y, n_estimators=10000):
     """
     Run a classifier for categorical data and return the mean squared error and the feature importances
     """
