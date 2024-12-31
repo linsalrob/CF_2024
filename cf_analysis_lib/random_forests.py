@@ -71,7 +71,7 @@ def gb_regressor(X, y, n_estimators=10000):
     return mse, feature_importances_sorted
 
 
-def random_forest_regression(X, y, n_estimators=10000):
+def random_forest_regression(X, y, n_estimators=1000):
     """
     Run a regressor for continuous data and return the mean squared error and the feature importances
     """
@@ -95,7 +95,7 @@ def random_forest_regression(X, y, n_estimators=10000):
     return mse, feature_importances_sorted
 
 
-def random_forest_classifier(X, y, n_estimators=10000):
+def random_forest_classifier(X, y, n_estimators=1000):
     """
     Run a classifier for categorical data and return the mean squared error and the feature importances
     """
