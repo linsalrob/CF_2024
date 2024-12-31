@@ -126,7 +126,10 @@ def plot_pca(ax, df, metadata, cluster_assignments, interesting_cluster, intcol)
         ypos = top_loadings_df.iloc[i, 1] * plotscaler
         ax.arrow(0, 0, xpos, ypos,
                       color=c, alpha=0.5, width=0.05)
-        texts.append(ax.text(xpos, ypos, top_loadings_df.index[i], color=c))
+        loading_text = top_loadings_df.index[i]
+        if len(loading_text) > 15:
+            loading_text = loading_text[:15] + "..."
+        texts.append(ax.text(xpos, ypos, loading_text, color=c))
 
     adjust_text(texts, ax=ax)
 
