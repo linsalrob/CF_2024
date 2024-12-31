@@ -144,14 +144,8 @@ def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_
     df_clust = df[cluster_assignments.loc[cluster_assignments["Cluster"] == interesting_cluster, "Feature"]]
     merged_df_clust = df_clust.join(metadata[[intcol]])
     df_clust_m = merged_df_clust.melt(id_vars=intcol, var_name='Features', value_name='Normalised read abundance')
-    sns.stripplot(data=df_clust_m, x='Features', y='Normalised read abundance', hue=intcol, dodge=True, jitter=True,
-                  palette={0: 'red', 1: 'blue'}, ax=ax)
+    sns.stripplot(data=df_clust_m, x='Features', y='Normalised read abundance',
+                  hue=intcol, dodge=True, jitter=True, ax=ax)
     ax.tick_params(axis='x', rotation=45)
     ax.set_xticklabels(ax.get_xticklabels(), ha='right')
-    ax.set_title(f"Read abundance for cluster {interesting_cluster} with counts > 0")
-    blue_patch = plt.Line2D([0], [0], marker='o', color='w', label=f'{intcol} positive',
-                            markerfacecolor='blue', markersize=10)
-    red_patch = plt.Line2D([0], [0], marker='o', color='w', label=f'{intcol} negative',
-                           markerfacecolor='red', markersize=10)
-
-    ax.legend(handles=[blue_patch, red_patch])
+    ax.set_title(f"Read abundance for {intcol} cluster {interesting_cluster}")
