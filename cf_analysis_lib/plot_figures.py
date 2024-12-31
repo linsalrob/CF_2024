@@ -106,9 +106,7 @@ def plot_pca(ax, df, metadata, cluster_assignments, interesting_cluster, intcol)
     pc1_variance = explained_variance[0]
     pc2_variance = explained_variance[1]
 
-    colours = np.where(merged_df_clust[intcol] == 1, 'blue', 'red')
-
-    sns.scatterplot(data=pca_df, x='PC1', y='PC2', alpha=0.2, c=colours, ax=ax)
+    sns.scatterplot(data=pca_df, x='PC1', y='PC2', alpha=0.2, ax=ax)
     ax.set_title(f"Cluster {interesting_cluster}")
     ax.set_xlabel(f'Principal Component 1 ({pc1_variance:.3f}%)')
     ax.set_ylabel(f'Principal Component 2 ({pc2_variance:.3f}%)')
@@ -132,14 +130,6 @@ def plot_pca(ax, df, metadata, cluster_assignments, interesting_cluster, intcol)
 
     adjust_text(texts, ax=ax)
 
-    # Add a legend
-    blue_patch = plt.Line2D([0], [0], marker='o', color='w', label=f'{intcol} positive',
-                            markerfacecolor='blue', alpha=0.2, markersize=10)
-    red_patch = plt.Line2D([0], [0], marker='o', color='w', label=f'{intcol} negative',
-                           markerfacecolor='red', alpha=0.2, markersize=10)
-
-    ax.legend(handles=[blue_patch, red_patch])
-
 def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_cluster, intcol):
     df_clust = df[cluster_assignments.loc[cluster_assignments["Cluster"] == interesting_cluster, "Feature"]]
     merged_df_clust = df_clust.join(metadata[[intcol]])
@@ -147,5 +137,6 @@ def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_
     sns.stripplot(data=df_clust_m, x='Features', y='Normalised read abundance',
                   hue=intcol, dodge=True, jitter=True, ax=ax)
     ax.tick_params(axis='x', rotation=45)
-    ax.set_xticklabels(ax.get_xticklabels(), ha='right')
+    for label in ax.get_xticklabels():
+        label.set_horizontalalignment('right')
     ax.set_title(f"Read abundance for {intcol} cluster {interesting_cluster}")
