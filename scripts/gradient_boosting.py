@@ -207,12 +207,14 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--images', help='image directory', default='gb_images')
     parser.add_argument('-d', '--datadir', help='data directory', default='..')
     parser.add_argument('-s', '--sequence_type', help='sequence type', default='MGI')
+    parser.add_argument('--skipto', help='skip to this column', default=None)
+    parser.add_argument('--force', help='force overwrite of results file', action='store_true')
     parser.add_argument('-l', '--sslevel', help='subsystem level', default='subsystems_norm_ss.tsv.gz')
     parser.add_argument('-t', '--taxa', help='taxonomic level', default='family')
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     args = parser.parse_args()
 
-    if os.path.exists(args.results):
+    if os.path.exists(args.results) and not args.force:
         print(f"Error: {args.results} already exists. Cowardly not overwriting", file=sys.stderr)
         sys.exit(1)
 
@@ -224,13 +226,19 @@ if __name__ == "__main__":
     replace_index = re.compile(r'^\d+\s+')
     replace_nonword = re.compile(r'\W+')
 
-    resultsfile = open(args.results, 'w')
+    resultsfile = open(args.results, 'a')
+
     print(f"Predictor\tFeature\tAvg. Importance\tNumber of iterations (out of {args.iterations})", file=resultsfile)
 
     skip_columns = {'minion', 'MGI', 'pwCF_ID', 'Sample_Type'}
 
+    skip = True if args.skipto else False
 
     for intcol in metadata.columns:
+        if skip and intcol == args.skipto:
+            skip = False
+        if skip:
+            continue
         if intcol in skip_columns:
             continue
         print(f"Working on {intcol}", file=sys.stderr)
@@ -245,19 +253,19 @@ if __name__ == "__main__":
         # do we need to encode this column
         custom_labels = {0: 'No', 1: 'Yes'}
         categorical_data = False
-        if pd.api.types.is_numeric_dtype(metadata[intcol]):
+        if pd.api.types.is_numeric_dtype(merged_df[intcol]):
             # this is an numeric column, so we can just continue
             pass
-        elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype) and pd.api.types.is_numeric_dtype(metadata[intcol].cat.categories.dtype):
+        elif isinstance(merged_df[intcol].dtype, pd.CategoricalDtype) and pd.api.types.is_numeric_dtype(merged_df[intcol].cat.categories.dtype):
             # this is a categorical column with numeric categories so we can also continue
             categorical_data = True
-        elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype):
+        elif isinstance(merged_df[intcol].dtype, pd.CategoricalDtype):
             # this is a categorical column with string categories so we need to encode it
             enc = OrdinalEncoder()
-            metadata_encoder = enc.fit(metadata[[intcol]])
+            metadata_encoder = enc.fit(merged_df[[intcol]])
             categories = metadata_encoder.categories_[0]
             custom_labels = {code: cat for code, cat in enumerate(categories)}
-            merged_df[intcol] = metadata_encoder.transform(metadata[[intcol]])
+            merged_df[intcol] = metadata_encoder.transform(merged_df[[intcol]])
             categorical_data = True
         else:
             # not sure what this is, so we skip it for now
