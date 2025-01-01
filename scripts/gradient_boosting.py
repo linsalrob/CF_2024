@@ -230,9 +230,14 @@ if __name__ == "__main__":
 
     print(f"Predictor\tFeature\tAvg. Importance\tNumber of iterations (out of {args.iterations})", file=resultsfile)
 
-    skip_columns = {'minion', 'MGI', 'pwCF_ID', 'Sample_Type'}
-
     skip = True if args.skipto else False
+
+    skip_columns = {'minion', 'MGI', 'pwCF_ID', 'Sample_Type', 'CF gene 1', 'CS_NTM_(Smear negative)', 'CS_Aspergillus niger', 'CS_Aspergillus terreus',
+                    'CS_Scedosporium apiospermum', 'O_Scedosporium apiospermum', 'O_Trichosporon mycotoxinivorans', '3 Aztreonam_IV'
+                    'DNA_extraction_ conc', 'SAGC ULN', 'DNA Conc. (ng/ul)',
+                    'Index I7', 'Index I5', 'Mean_Size_BP', 'Total Clusters Passing Filter (Million)'}
+    
+    shouldskip = []
 
     for intcol in metadata.columns:
         if skip and intcol == args.skipto:
@@ -283,11 +288,19 @@ if __name__ == "__main__":
         msesum = 0
         for i in range(args.iterations):
             if categorical_data or metadata[intcol].dtype == 'object':
-                mse, feature_importances_sorted = gb_classifier(X, y, n_estimators=args.nestimators)
-                met = 'classifier'
+                try:
+                    mse, feature_importances_sorted = gb_classifier(X, y, n_estimators=args.nestimators)
+                    met = 'classifier'
+                except ValueError as e:
+                    shouldskip.append(intcol)
+                    continue
             else:
-                mse, feature_importances_sorted = gb_regressor(X, y, n_estimators=args.nestimators)
-                met = 'regressor'
+                try:
+                    mse, feature_importances_sorted = gb_regressor(X, y, n_estimators=args.nestimators)
+                    met = 'regressor'
+                except ValueError as e:
+                    shouldskip.append(intcol)
+                    continue
 
             for f in feature_importances_sorted.index[:list_features]:
                 top_features[f] = top_features.get(f, 0) + feature_importances_sorted.loc[f, 'importance']
@@ -337,3 +350,7 @@ if __name__ == "__main__":
         plt.savefig(f"{args.images}/{intcol_filename}.png")
 
     resultsfile.close()
+
+
+if shouldskip:
+    print(f"THESE MODELS FAILED. We skipped them, and you should!\n{shouldskip}", file=sys.stderr)
