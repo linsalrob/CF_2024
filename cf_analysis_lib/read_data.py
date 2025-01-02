@@ -37,7 +37,7 @@ corrections = {
 }
 
 
-def read_taxonomy(datadir, sequence_type, taxonomy):
+def read_taxonomy(datadir, sequence_type, taxonomy, all_taxa=False):
     """
     Read the taxonomy file and return a data frame
     """
@@ -53,7 +53,8 @@ def read_taxonomy(datadir, sequence_type, taxonomy):
     if not os.path.exists(tax_file):
         raise FileNotFoundError(f"Error: {tax_file} does not exist")
     df = pd.read_csv(tax_file, sep='\t', compression='gzip')
-    df = df[df['taxonomy'].str.contains('k__Bacteria')]
+    if not all_taxa:
+        df = df[df['taxonomy'].str.contains('k__Bacteria')]
     df = df[~df['taxonomy'].str.endswith(f'{taxonomy[0]}__')]
     df = df.set_index('taxonomy')
     df = df.rename(columns=corrections[sequence_type])
