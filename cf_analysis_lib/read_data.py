@@ -149,7 +149,7 @@ def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
 
     return sboth
 
-def read_the_data(sequence_type, datadir, sslevel='subsystems_norm_ss.tsv.gz', taxa="family", verbose=False):
+def read_the_data(sequence_type, datadir, sslevel='subsystems_norm_ss.tsv.gz', taxa="family", all_taxa=False, verbose=False):
     """
     Read the data and return the data frame and metadata
     :param sequence_type: MGI or MinION
@@ -164,7 +164,7 @@ def read_the_data(sequence_type, datadir, sslevel='subsystems_norm_ss.tsv.gz', t
     ss_df = ss_df.T
     if verbose:
         print(f"Read {ss_df.shape[0]} samples and {ss_df.shape[1]} subsystems", file=sys.stderr)
-    genus_otu = read_taxonomy(datadir, sequence_type, taxa)
+    genus_otu = read_taxonomy(datadir, sequence_type, taxa, all_taxa)
     genus_otu = genus_otu.T
     if verbose:
         print(f"Read {genus_otu.shape[0]} samples and {genus_otu.shape[1]} {taxa}", file=sys.stderr)
