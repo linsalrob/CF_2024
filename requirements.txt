@@ -6,6 +6,7 @@ matplotlib
 natsort
 numpy
 pandas
+python-docx
 scipy
 scikit-learn
 seaborn
