@@ -14,7 +14,7 @@ from sklearn.impute import SimpleImputer
 from .metadata_data import metadata_definitions
 
 corrections = {
-    "MGI" : {
+    "mgi" : {
         '1112926_20171212_S': '1447437_20171212_S',
         '1128691_20170206_S': '1128691_20171206_S',
         '1255498_20171212_S': '1590009_20171212_S',
@@ -44,12 +44,14 @@ def read_taxonomy(datadir, sequence_type, taxonomy, all_taxa=False):
 
     if sequence_type.lower() == 'mgi':
         sequence_type = 'MGI'
+        sequence_dir = 'MGI'
     elif sequence_type.lower() == 'minion':
         sequence_type = 'minion'
+        sequence_dir = 'MinION'
     else:
         raise ValueError(f"Sorry. Don't know what sequence type {sequence_type} is supposed to be")
 
-    tax_file = os.path.join(datadir, sequence_type, "Taxonomy", f"{sequence_type}_reads_{taxonomy}.normalised.tsv.gz")
+    tax_file = os.path.join(datadir, sequence_dir, "Taxonomy", f"{sequence_type}_reads_{taxonomy}.normalised.tsv.gz")
     if not os.path.exists(tax_file):
         raise FileNotFoundError(f"Error: {tax_file} does not exist")
     df = pd.read_csv(tax_file, sep='\t', compression='gzip')
@@ -57,7 +59,7 @@ def read_taxonomy(datadir, sequence_type, taxonomy, all_taxa=False):
         df = df[df['taxonomy'].str.contains('k__Bacteria')]
     df = df[~df['taxonomy'].str.endswith(f'{taxonomy[0]}__')]
     df = df.set_index('taxonomy')
-    df = df.rename(columns=corrections[sequence_type])
+    df = df.rename(columns=corrections[sequence_type.lower()])
     df.index = df.index.str.replace(f'{taxonomy[0]}__', '').str.replace('Candidatus ', '')
     df.index = df.index.str.split(';').str[-1]
 
@@ -91,8 +93,8 @@ def read_metadata(datadir, sequence_type, categorise=False, verbose=False):
     for ix in metadata.index:
         for seq_type in sequencing:
             s = metadata.loc[ix, seq_type]
-            if s in corrections[seq_type]:
-                metadata.loc[ix, seq_type] = corrections[seq_type][s]
+            if s in corrections[seq_type.lower()]:
+                metadata.loc[ix, seq_type] = corrections[seq_type.lower()][s]
 
     # impute missing values by most frequent (i.e. mode)
     # imputer = SimpleImputer(strategy='most_frequent')
@@ -121,7 +123,7 @@ def read_subsystems(subsystems_file, sequence_type):
         df = pd.read_csv(subsystems_file, sep='\t', compression='gzip', index_col=0)
     else:
         df = pd.read_csv(subsystems_file, sep='\t', index_col=0)
-    df = df.rename(columns=corrections[sequence_type])
+    df = df.rename(columns=corrections[sequence_type.lower()])
     return df
 
 def sorted_presence_absence(df1, df2, minrowsum=0, asc_sort=False):
