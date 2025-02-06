@@ -2,7 +2,6 @@
 Plot a PCA and a read abundance plot for the interesting clusters
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -28,6 +27,7 @@ def plot_feature_importance(ax, feature_importances_sorted, title):
     ax.set_xlabel("Importance")
     ax.set_ylabel("")
     ax.set_title(title)
+
 
 def plot_feature_abundance(ax, feature_df, intcol, title):
     """
@@ -85,6 +85,7 @@ def plot_top_features(merged_df, top_features, top_feature_counts, intcol, intco
     plt.tight_layout(rect=[0, 0, 1, 0.9])
     plt.show()
 
+
 def plot_pca(ax, df, metadata, cluster_assignments, interesting_cluster, intcol):
     pca = PCA(n_components=2)
 
@@ -125,13 +126,14 @@ def plot_pca(ax, df, metadata, cluster_assignments, interesting_cluster, intcol)
         xpos = top_loadings_df.iloc[i, 0] * plotscaler
         ypos = top_loadings_df.iloc[i, 1] * plotscaler
         ax.arrow(0, 0, xpos, ypos,
-                      color=c, alpha=0.5, width=0.05)
+                 color=c, alpha=0.5, width=0.05)
         loading_text = top_loadings_df.index[i]
         if len(loading_text) > 15:
             loading_text = loading_text[:15] + "..."
         texts.append(ax.text(xpos, ypos, loading_text, color=c))
 
     adjust_text(texts, ax=ax)
+
 
 def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_cluster, intcol):
     df_clust = df[cluster_assignments.loc[cluster_assignments["Cluster"] == interesting_cluster, "Feature"]]
@@ -144,10 +146,12 @@ def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_
         label.set_horizontalalignment('right')
     ax.set_title(f"Read abundance for {intcol} cluster {interesting_cluster}")
 
-def create_custom_labels(metadata, intcol, merged_df):
+
+def create_custom_labels(metadata, intcol, merged_df, custom_labels=None):
     # do we need to encode this column
-    custom_labels = {0: 'No', 1: 'Yes'}
     categorical_data = False
+    if custom_labels is None:
+        custom_labels = {0: 'No', 1: 'Yes'}
     if pd.api.types.is_numeric_dtype(metadata[intcol]):
         # this is an numeric column, so we can just continue
         categorical_data = False
