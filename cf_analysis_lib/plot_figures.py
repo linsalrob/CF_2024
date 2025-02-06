@@ -143,3 +143,29 @@ def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_
     for label in ax.get_xticklabels():
         label.set_horizontalalignment('right')
     ax.set_title(f"Read abundance for {intcol} cluster {interesting_cluster}")
+
+def custom_labels(metadata, intcol, merged_df):
+    # do we need to encode this column
+    custom_labels = {0: 'No', 1: 'Yes'}
+    categorical_data = False
+    if pd.api.types.is_numeric_dtype(metadata[intcol]):
+        # this is an numeric column, so we can just continue
+        categorical_data = False
+    elif isinstance(metadata[intcol].dtype, pd.CategoricalDtype) and pd.api.types.is_numeric_dtype(
+            metadata[intcol].cat.categories.dtype):
+        # this is a categorical column with numeric categories so we can also continue
+        categorical_data = True
+    elif isinstance(merged_df[intcol].dtype, pd.CategoricalDtype):
+        # this is a categorical column with string categories so we need to encode it
+        enc = OrdinalEncoder()
+        metadata_encoder = enc.fit(merged_df[[intcol]])
+        categories = metadata_encoder.categories_[0]
+        custom_labels = {code: cat for code, cat in enumerate(categories)}
+        merged_df[intcol] = metadata_encoder.transform(merged_df[[intcol]])
+        categorical_data = True
+    else:
+        # we don't know what this is, so we skip it for now
+        print(f"Skipping {intcol} as it is not numeric or categorical")
+        return None, None
+
+    return categorical_data, custom_labels
