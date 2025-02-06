@@ -32,7 +32,10 @@ def pd2docx(df, docx, verbose=False):
     for index, row in df.iterrows():
         row_cells = table.add_row().cells
         for i, cell in enumerate(row):
-            row_cells[i].text = str(cell)
+            if isinstance(cell, float):
+                row_cells[i].text = f"{cell:.2f}"
+            else:
+                row_cells[i].text = str(cell)
 
     # Save the document
     document.save(docx)
