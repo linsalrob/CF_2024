@@ -144,7 +144,7 @@ def plot_abundance_stripplot(ax, df, metadata, cluster_assignments, interesting_
         label.set_horizontalalignment('right')
     ax.set_title(f"Read abundance for {intcol} cluster {interesting_cluster}")
 
-def custom_labels(metadata, intcol, merged_df):
+def create_custom_labels(metadata, intcol, merged_df):
     # do we need to encode this column
     custom_labels = {0: 'No', 1: 'Yes'}
     categorical_data = False
